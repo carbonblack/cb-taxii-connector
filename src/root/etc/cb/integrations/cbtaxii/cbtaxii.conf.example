@@ -1,0 +1,78 @@
+
+# CBTAXII CONFIGURATION FILE
+# Imports taxii/stix feeds into Carbon Black feeds
+
+# general cbconfig options
+
+[cbconfig]
+# change this if your API port is different
+#(API port is usually the same port that you login using for the UI)
+server_port=443
+
+
+#
+# Put each site into its own configuration section.
+# You might just have a single site, like soltra edge or a remote taxii server
+#
+
+[soltraedge]
+
+# the address of the site (server ip or dns)
+site=192.168.230.205
+
+# change to true if you require https
+use_https=false
+
+# if you need SSL certificates for authentication, set the path of the
+# certificate and key here.  Please leave blank to ignore.
+cert_file=
+key_file=
+
+# the output path for the feeds, probably leave this alone
+output_path=/usr/share/cb/integrations/cbtaxii/feeds/
+
+# the icon link, we come with soltra and taxii icons, but if you
+# have your own, this will show up
+icon_link=/usr/share/cb/integrations/cbtaxii/soltra-logo.png
+
+# username for auth
+username=admin
+
+# password for auth
+password=avalanche
+
+# automatically create CB feeds, probably leave this to true
+feeds_enable=true
+
+# do you want feed hits in CB to generate alerts? Available options
+# are syslog or cb, and you can do both by putting syslog,cb
+feeds_alerting=syslog,cb
+
+# there have been a lot of indicators that are whole class Cs.
+# Set this to false if you do not want to include these indicators,
+# otherwise set to true
+enable_ip_ranges=true
+
+
+# (optional) the start date for which to start requesting data.
+# Defaults to 2015-01-01 00:00:00 if you supply nothing
+start_date=2015-03-01 00:00:00
+
+# (optional) the minutes to advance for each request.  This
+# defaults to 15.  If you don't have a lot of data, you could
+# advance your requests to every 60 minutes or multiply 60 times
+# number of hours, so 1440 to ask for data in daily chunks
+minutes_to_advance=30
+
+
+## If you want to use hailataxii
+#[hailataxii]
+#site=hailataxii.com
+#output_path=/usr/share/cb/integrations/cbtaxii/feeds/
+#icon_link=/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
+#username=guest
+#password=guest
+#feeds_enable=true
+#feeds_alerting=syslog,cb
+#start_date=2015-01-01 00:00:00
+#minutes_to_advance=120

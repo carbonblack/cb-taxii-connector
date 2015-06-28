@@ -1,0 +1,15 @@
+setup.cfg
+setup.py
+src/cbtaxii/__init__.py
+src/cbtaxii/__init__.pyc
+src/cbtaxii/bridge.py
+src/cbtaxii/cb_feed_util.py
+src/cbtaxii/taxii_client.py
+src/cbtaxii/util.py
+src/cbtaxii/version.py
+src/cbtaxii/version.pyc
+src/root/etc/cb/integrations/cbtaxii/cbtaxii.conf.example
+src/root/etc/cron.d/cbtaxii
+src/root/usr/share/cb/integrations/cbtaxii/cbtaxii
+src/root/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
+src/root/usr/share/cb/integrations/cbtaxii/soltra-logo.png

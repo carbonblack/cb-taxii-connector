@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ "$(id -u)" == "0" ]; then
+    sudo -u cb /usr/bin/env python -m cbtaxii.bridge $@
+    exit 0
+fi
+/usr/bin/env python -m cbtaxii.bridge $@
