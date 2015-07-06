@@ -64,8 +64,9 @@ mv /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxi
 From here, one or more TAXII services can be configured. The example configuration file is placed here along with the comments it contains:
 
 ```
-    # Imports taxii/stix feeds into Carbon Black feeds # general cbconfig options
+    # Imports taxii/stix feeds into Carbon Black feeds 
     
+    # general cbconfig options
     [cbconfig]
     # change this if your API port is different
     #(API port is usually the same port that you login using for the UI) 
