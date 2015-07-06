@@ -8,10 +8,7 @@ You can install the pre-built RPMs via YUM by using the CB Open Source repositor
 The pre-built RPM is supported via our [User eXchange (Jive)](https://community.bit9.com/groups/developer-relations) 
 and via email to dev-support@bit9.com.  
 
-## Getting Started
- 
-
-**Introduction**
+## Introduction
 
 This document describes how to install and use the Carbon Black TAXII Connector. This connector allows for the importing of STIX data by querying one or more TAXII services and retrieving that data and then converting it into CB feeds using the CB JSON format for IOCs. The job queries for available STIX/TAXII data that is newer than the last time it asked, and by default runs every hour.
 
@@ -24,24 +21,28 @@ The following IOC types are extracted from STIX data:
 * IP-Addresses
 * IP-Address Ranges
 	
-**Requirements**
+## Requirements
 
 This Carbon Black TAXII Connector has the following requirements:
 
-	1. Carbon Black Enterprise Server 5.0 (or greater) – this integration leverages API calls and feed functionality available in Carbon Black 5.0 and newer.  In order to check the version, you can run the following rpm command on your server:
-		*[root@localhost ~]# rpm -qa | grep cb-enterprise
-		cb-enterprise-5.0.0.150122.1654-1.el6.x86_64*
-		
-	2. Access to TAXII Service Provider – the purpose of this integration is to retrieve STIX threat information via a TAXII service, so if you do not have access to a TAXII service this integration will be of no value. Example services are SoltraEdge and HailATaxii.com
+* *Carbon Black Enterprise Server 5.0 (or greater)* – this integration leverages API calls and feed functionality available in Carbon Black 5.0 and newer.  In order to check the version, you can run the following rpm command on your server:
 
-**Installation**
+```
+[root@localhost ~]# rpm -qa | grep cb-enterprise
+cb-enterprise-5.0.0.150122.1654-1.el6.x86_64
+```
+
+* *Access to TAXII Service Provider* – the purpose of this integration is to retrieve STIX threat information via a TAXII service, so if you do not have access to a TAXII service this integration will be of no value. Example services are SoltraEdge and HailATaxii.com
+
+## Installation
+
 Take the following steps to install the Carbon Black Taxii Connector:
 
 1. Install the CbOpenSource.repo file found in the root of this repository (place it in /etc/yum.repos.d/ on your head CB Server node.)
 2. Install by issuing the following command as root (or sudo): yum install python-cbtaxii -y
 3. You’ll likely see several packages installed when you issue the command from #2.
 	
-**Upgrades**
+## Upgrades
 
 When an upgrade is available, it should be as easy as doing the following:
 
@@ -50,17 +51,19 @@ When an upgrade is available, it should be as easy as doing the following:
 Please note that a new /etc/cb/integrations/cbtaxii/cbtaxii.conf.example might be made available in some cases, at which point any new settings should be studied, understood, and applied to the production configuration file if necessary.
 
 
-**Configuration**
+## Configuration
 
 You’ll need to place a configuration file in the following location:
-*/etc/cb/integrations/cbtaxii/cbtaxii.conf*
+`/etc/cb/integrations/cbtaxii/cbtaxii.conf`
 
-A sample file is provided in /etc/cb/integrations/cbtaxii/cbtaxii.conf.example, so you can rename the file with the following command:
-*mv /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxii/cbtaxii.conf*
+A sample file is provided in `/etc/cb/integrations/cbtaxii/cbtaxii.conf.example`, so you can rename the file with the following command:
+```
+mv /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxii/cbtaxii.conf
+```
 
 From here, one or more TAXII services can be configured. The example configuration file is placed here along with the comments it contains:
 
-    # CBTAXII CONFIGURATION FILE #####################
+```
     # Imports taxii/stix feeds into Carbon Black feeds # general cbconfig options
     
     [cbconfig]
@@ -120,20 +123,21 @@ From here, one or more TAXII services can be configured. The example configurati
     # advance your requests to every 60 minutes or multiply 60 times 
     # number of hours, so 1440 to ask for data in daily chunks 
     minutes_to_advance=30
-    
-    # END CBTAXII CONFIGURATION FILE #####################
-    
-**Execution**
+```    
+
+## Execution
 
 By default the linux cron daemon will run this integration every hour to check for new data from the TAXII services you 
-have configured. When it runs it will use the current settings found in */etc/cb/integrations/cbtaxii/cbtaxii.conf*, 
+have configured. When it runs it will use the current settings found in `/etc/cb/integrations/cbtaxii/cbtaxii.conf`, 
 so make sure you are careful when changing any of those settings.
 
 When you first install the connector, you might not want to wait until the hour mark for the job to run. In this case, 
 you can force the connector to run manually. As either *root* or *cb* user on the Carbon Black Server, execute the 
 following command:
 
-**/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf**
+```
+/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf
+```
 
 It is perfectly fine to do this because the script will only allow one copy of itself to run at a time, so you don’t 
 have to worry about the cron daemon attempting to run this while your manual instance is still executing.
@@ -144,11 +148,10 @@ have configured.*
 *Note #2: this script logs everything to /var/log/cb/integrations/cbtaxii/cbtaxii.log , so you will see very little 
 output when you run it manually.*
 
-**Troubleshooting**
+## Troubleshooting
 
 If you suspect a problem, please first look at the cbtaxii connector logs found here:
 
-**/var/log/cb/integrations/cbtaxii/cbtaxii.log**
+`/var/log/cb/integrations/cbtaxii/cbtaxii.log`
 
-(There might be multiple files as the logger “rolls over” when the log file hits a certain size).
-	
+(There might be multiple files as the logger "rolls over" when the log file hits a certain size).
