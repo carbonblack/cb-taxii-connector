@@ -9,6 +9,9 @@
 #(API port is usually the same port that you login using for the UI)
 server_port=443
 
+# You need to supply a CB global administrator API key here so that we can add our feed
+auth_token=
+
 
 #
 # Put each site into its own configuration section.

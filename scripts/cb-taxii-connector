@@ -24,50 +24,9 @@
 #
 
 
-import os
 import optparse
-import traceback
-import requests
-from contextlib import contextmanager
-from cbopensource.connectors.taxii.util import *
-from cbopensource.connectors.taxii.bridge import CbTaxiiFeedConverter
+from cbopensource.connectors.taxii.bridge import runner, runner_import
 from cbopensource.connectors.taxii.version import __version__
-
-@contextmanager
-def file_lock(lock_file):
-    if os.path.exists(lock_file):
-        pid = file(lock_file).read()
-        print 'Only one instance can run at once. '\
-              'Script is locked with %s (pid: %s)' % (lock_file, pid)
-        sys.exit(-1)
-    else:
-        open(lock_file, 'w').write("%d" % os.getpid())
-        try:
-            yield
-        finally:
-            os.remove(lock_file)
-
-def runner(configpath, export_mode, loglevel=logging.DEBUG):
-    with file_lock('/var/run/cb/cbtaxii.py.pid'):
-        global _logger
-        if export_mode:
-            _logger = create_stdout_log("cb-taxii", loglevel)
-        else:
-            _logger = create_rotating_log("cb-taxii",
-                                       "/var/log/cb/integrations/cbtaxii/cbtaxii.log",
-                                       loglevel,
-                                       1048576,
-                                       10)
-
-        try:
-            if not export_mode:
-                print "CbTaxii %s Running (could take a while).  Check status: /var/log/cb/integrations/cbtaxii/cbtaxii.log" % __version__
-            cbt = CbTaxiiFeedConverter(configpath, export_mode)
-            return cbt.perform()
-        except:
-            _logger.error("%s" % traceback.format_exc())
-            return -1
-
 
 def build_cli_parser():
     parser = optparse.OptionParser(usage="%prog [options]", description="Set status to Resolved for a set of alerts.")
@@ -100,7 +59,7 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     if opts.importdir:
-        CbTaxiiFeedConverter.perform_from_files(opts.importdir)
+        runner_import(opts.importdir)
     elif runner(opts.configpath, opts.export_mode):
         sys.exit(0)
     else:
