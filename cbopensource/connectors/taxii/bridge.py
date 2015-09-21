@@ -32,9 +32,7 @@ import sys
 import time
 import tempfile
 import requests
-import optparse
 import simplejson as json
-from contextlib import contextmanager
 from lxml import etree
 
 from taxii_client import TaxiiClient, stix_element_to_reports, fast_xml_iter, UnauthorizedException
@@ -348,78 +346,3 @@ class CbTaxiiFeedConverter(object):
 
             for collection in collections:
                 self._import_collection(client, site, collection)
-
-
-
-@contextmanager
-def file_lock(lock_file):
-    if os.path.exists(lock_file):
-        pid = file(lock_file).read()
-        print 'Only one instance can run at once. '\
-              'Script is locked with %s (pid: %s)' % (lock_file, pid)
-        sys.exit(-1)
-    else:
-        open(lock_file, 'w').write("%d" % os.getpid())
-        try:
-            yield
-        finally:
-            os.remove(lock_file)
-
-def runner(configpath, export_mode, loglevel=logging.DEBUG):
-    with file_lock('/var/run/cb/cbtaxii.py.pid'):
-        global _logger
-        if export_mode:
-            _logger = create_stdout_log("cb-taxii", loglevel)
-        else:
-            _logger = create_rotating_log("cb-taxii",
-                                       "/var/log/cb/integrations/cbtaxii/cbtaxii.log",
-                                       loglevel,
-                                       1048576,
-                                       10)
-
-        try:
-            if not export_mode:
-                print "CbTaxii %s Running (could take a while).  Check status: /var/log/cb/integrations/cbtaxii/cbtaxii.log" % __version__
-            cbt = CbTaxiiFeedConverter(configpath, export_mode)
-            return cbt.perform()
-        except:
-            _logger.error("%s" % traceback.format_exc())
-            return -1
-
-
-def build_cli_parser():
-    parser = optparse.OptionParser(usage="%prog [options]", description="Set status to Resolved for a set of alerts.")
-
-    # for each supported output type, add an option
-    #
-    parser.add_option("-c", "--config", action="store", default=None, dest="configpath",
-                      help="CBTaxii ocnfig file")
-
-    parser.add_option("-e", "--export", action="store_true", default=False, dest="export_mode", help="Export mode (will not update feed).")
-
-    parser.add_option("-i", "--import", action="store", default=None, dest="importdir", help="Parse XML from files")
-
-    parser.add_option("-v", "--version", action="store_true", default=False, dest="version",
-                      help="Do not verify server SSL certificate.")
-
-    return parser
-
-if __name__ == "__main__":
-    parser = build_cli_parser()
-    opts, args = parser.parse_args(sys.argv)
-    if not opts.version and not opts.configpath and not opts.importdir:
-        print "Missing required param!"
-        parser.print_help()
-        sys.exit(-1)
-
-    # IF VERSION
-    if opts.version:
-        print "CB Taxii Service Connector, Version: %s" % __version__
-        sys.exit(-1)
-
-    if opts.importdir:
-        CbTaxiiFeedConverter.perform_from_files(opts.importdir)
-    elif runner(opts.configpath, opts.export_mode):
-        sys.exit(0)
-    else:
-        sys.exit(1)

@@ -1,9 +1,0 @@
-#!/bin/sh
-
-mkdir -p /var/log/cb/integrations/cbtaxii/
-touch /var/log/cb/integrations/cbtaxii/cbtaxii.log
-mkdir -p /usr/share/cb/integrations/cbtaxii/feeds/
-
-chown -R cb:cb /var/log/cb/integrations/cbtaxii
-chown -R cb:cb /usr/share/cb/integrations/cbtaxii/feeds/
-chmod +x /usr/share/cb/integrations/cbtaxii/cbtaxii
