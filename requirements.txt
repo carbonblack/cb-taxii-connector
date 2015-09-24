@@ -5,5 +5,3 @@
 -e git://github.com/STIXProject/python-stix@v1.2.0.0#egg=stix
 requests >= 2.7.0
 simplejson
-
-

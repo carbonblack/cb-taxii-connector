@@ -27,6 +27,8 @@
 import optparse
 from cbopensource.connectors.taxii.bridge import runner, runner_import
 from cbopensource.connectors.taxii.version import __version__
+import sys
+import os
 
 def build_cli_parser():
     parser = optparse.OptionParser(usage="%prog [options]", description="Set status to Resolved for a set of alerts.")
@@ -46,6 +48,11 @@ def build_cli_parser():
     return parser
 
 if __name__ == "__main__":
+    # set the path to the CA certificate PEM file to our local cache
+    cacert_pem_path = "/usr/share/cb/integrations/cbtaxii/cacert.pem"
+    if os.path.isfile(cacert_pem_path):
+        os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
+
     parser = build_cli_parser()
     opts, args = parser.parse_args(sys.argv)
     if not opts.version and not opts.configpath and not opts.importdir:
