@@ -75,6 +75,9 @@ class CbTaxiiFeedConverter(object):
 
         self.api_token = config.get("cbconfig", "auth_token")
 
+        if len(self.api_token) == 0:
+            _logger.error("auth_token cannot be empty!")
+
         for section in config.sections():
             # don't do cbconfig
             if section.lower() == 'cbconfig':
@@ -204,50 +207,61 @@ class CbTaxiiFeedConverter(object):
 
         _logger.info("Feed start time %s" % feed_helper.start_date)
 
-        reports = []
-        # CATCHUP -- TODO, move to a function??
-        while True:
-            these_reports = []
-            tries = 0
-            while tries < 5:
-                try:
-                    if feed_helper.start_date > feed_helper.end_date:
+        try:
+            reports = []
+            # CATCHUP -- TODO, move to a function??
+            while True:
+                break_requested = False
+                these_reports = []
+                tries = 0
+                while tries < 5:
+                    try:
+                        if feed_helper.start_date > feed_helper.end_date:
+                            break
+
+                        t1 = time.time()
+                        message = client.retrieve_collection(collection_name, feed_helper.start_date, feed_helper.end_date)
+                        t2 = time.time()
+
+                        message_len = len(message)
+
+                        if self.export_mode:
+                            path = self._export_message_to_disk(sanitized_feed_name, feed_helper.start_date, feed_helper.end_date, message)
+                            _logger.info("%s - %s - %s - %d (%f)- %s" % (feed_helper.start_date, feed_helper.end_date, collection_name, message_len, (t2-t1), path))
+                            message = None
+                        else:
+                            filepath = self._write_message_to_disk(message)
+                            message = None
+                            site_url = "%s://%s" % ("https" if site.get('use_https') else "http", site.get('site'))
+                            these_reports = self._message_to_reports(filepath, site.get('site'), site_url, collection_name, site.get('enable_ip_ranges'))
+                            t3 = time.time()
+                            os.remove(filepath)
+                            count = len(these_reports)
+                            _logger.info("%s - %s - %s - %d (%d)(%.2f)(%.2f)" % (feed_helper.start_date, feed_helper.end_date, collection_name, count, message_len, (t2-t1), (t3-t2)))
                         break
+                    except KeyboardInterrupt:
+                        break_requested = True
+                    except:
+                        _logger.error("%s" % traceback.format_exc())
+                        time.sleep(5)
+                        tries += 1
 
-                    t1 = time.time()
-                    message = client.retrieve_collection(collection_name, feed_helper.start_date, feed_helper.end_date)
-                    t2 = time.time()
+                if tries == 5:
+                    _logger.error("Giving up for site %s, collection %s" % (site.get('site'), collection))
+                    return
 
-                    message_len = len(message)
-
-                    if self.export_mode:
-                        path = self._export_message_to_disk(sanitized_feed_name, feed_helper.start_date, feed_helper.end_date, message)
-                        _logger.info("%s - %s - %s - %d (%f)- %s" % (feed_helper.start_date, feed_helper.end_date, collection_name, message_len, (t2-t1), path))
-                        message = None
-                    else:
-                        filepath = self._write_message_to_disk(message)
-                        message = None
-                        site_url = "%s://%s" % ("https" if site.get('use_https') else "http", site.get('site'))
-                        these_reports = self._message_to_reports(filepath, site.get('site'), site_url, collection_name, site.get('enable_ip_ranges'))
-                        t3 = time.time()
-                        os.remove(filepath)
-                        count = len(these_reports)
-                        _logger.info("%s - %s - %s - %d (%d)(%.2f)(%.2f)" % (feed_helper.start_date, feed_helper.end_date, collection_name, count, message_len, (t2-t1), (t3-t2)))
+                if break_requested:
                     break
-                except:
-                    _logger.error("%s" % traceback.format_exc())
-                    time.sleep(5)
-                    tries += 1
 
-            if tries == 5:
-                _logger.error("Giving up for site %s, collection %s" % (site.get('site'), collection))
-                return
+                if not self.export_mode:
+                    reports.extend(these_reports)
 
-            if not self.export_mode:
-                reports.extend(these_reports)
+                if not feed_helper.advance():
+                    break
 
-            if not feed_helper.advance():
-                break
+        except KeyboardInterrupt:
+            pass
+
         ########## end while (for iterating across time)
 
         _logger.info("COMPLETED %s,%s,%s,%s,%s (%d)" % (site.get('site'),
