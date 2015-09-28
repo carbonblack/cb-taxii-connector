@@ -42,6 +42,8 @@ def build_cli_parser():
 
     parser.add_option("-i", "--import", action="store", default=None, dest="importdir", help="Parse XML from files")
 
+    parser.add_option("-l", "--list", action="store_true", default=False, dest="enumerate_collections_only", help="Enumerate available collections and exit")
+
     parser.add_option("-v", "--version", action="store_true", default=False, dest="version",
                       help="Do not verify server SSL certificate.")
 
@@ -67,7 +69,7 @@ if __name__ == "__main__":
 
     if opts.importdir:
         runner_import(opts.importdir)
-    elif runner(opts.configpath, opts.export_mode):
+    elif runner(opts.configpath, opts.export_mode, opts.enumerate_collections_only):
         sys.exit(0)
     else:
         sys.exit(1)

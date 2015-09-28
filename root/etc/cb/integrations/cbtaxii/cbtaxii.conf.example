@@ -44,6 +44,9 @@ username=admin
 # password for auth
 password=avalanche
 
+# collections to retrieve (* for all, otherwise comma separated list case-insensitive)
+collections=*
+
 # automatically create CB feeds, probably leave this to true
 feeds_enable=true
 

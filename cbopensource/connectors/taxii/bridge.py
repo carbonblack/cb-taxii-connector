@@ -68,15 +68,12 @@ class CbTaxiiFeedConverter(object):
         config.read(configpath)
 
         # SEE IF THERE's A DIFFERENT SERVER_PORT
-        server_port = 443
+        self.server_port = 443
         if config.has_section("cbconfig"):
             if config.has_option("cbconfig", "server_port"):
-                server_port = config.getint("cbconfig", "server_port")
+                self.server_port = config.getint("cbconfig", "server_port")
 
         self.api_token = config.get("cbconfig", "auth_token")
-
-        if len(self.api_token) == 0:
-            _logger.error("auth_token cannot be empty!")
 
         for section in config.sections():
             # don't do cbconfig
@@ -90,6 +87,8 @@ class CbTaxiiFeedConverter(object):
             password = config.get(section, "password")
             feeds_enable = config.getboolean(section, "feeds_enable")
             feeds_alerting = config.get(section, "feeds_alerting")
+            collections = config.get(section, "collections") if config.has_option(section, "collections") else "*"
+
 
             ### OPTIONAL ARGUMENTS #######################################################
             if config.has_option(section, "start_date"):
@@ -135,6 +134,7 @@ class CbTaxiiFeedConverter(object):
                                "output_path": output_path,
                                "username": username,
                                "password": password,
+                               "collections": collections,
                                "icon_link": icon_link,
                                "feeds_enable": feeds_enable,
                                "feeds_alerting": feeds_alerting,
@@ -144,8 +144,17 @@ class CbTaxiiFeedConverter(object):
                                "key_file": key_file,
                                "cert_file": cert_file,
                                "minutes_to_advance": minutes_to_advance})
+            self.cb = None
 
-        server_url = "https://127.0.0.1:%d/" % server_port
+    def __enable_cb_api_if_necessary(self):
+        if self.cb:
+            return
+
+        if len(self.api_token) == 0:
+            _logger.error("auth_token cannot be empty!")
+            sys.exit(-1)
+
+        server_url = "https://127.0.0.1:%d/" % self.server_port
         _logger.info("Using Server URL: %s" % server_url)
         self.cb = CbApi(server_url, token=self.api_token, ssl_verify=False)
         try:
@@ -186,6 +195,9 @@ class CbTaxiiFeedConverter(object):
 
 
     def _import_collection(self, client, site, collection):
+        if not self.export_mode:
+            self.__enable_cb_api_if_necessary()
+
         collection_name = collection.get('collection_name', '')
         sanitized_feed_name = cleanup_string("%s%s" % (site.get('site'), collection_name))
         available = collection.get('available', False)
@@ -207,8 +219,8 @@ class CbTaxiiFeedConverter(object):
 
         _logger.info("Feed start time %s" % feed_helper.start_date)
 
+        reports = []
         try:
-            reports = []
             # CATCHUP -- TODO, move to a function??
             while True:
                 break_requested = False
@@ -341,7 +353,7 @@ class CbTaxiiFeedConverter(object):
                 if "hash" in iocs:
                     print "%s - %s" % (site, iocs['hash'])
 
-    def perform(self):
+    def perform(self, enumerate_collections_only=False):
         """
         Loops through the sites supplied and adds each one if necessary.
 
@@ -355,6 +367,14 @@ class CbTaxiiFeedConverter(object):
                                  site.get('use_https'),
                                  site.get('key_file'),
                                  site.get('cert_file'))
+
+            desired_collections = site.get('collections').lower().split(',')
+
+            if '*' in desired_collections:
+                want_all = True
+            else:
+                want_all = False
+
             try:
                 collections = client.enumerate_collections(_logger)
                 if len(collections) == 0:
@@ -364,8 +384,17 @@ class CbTaxiiFeedConverter(object):
                 continue
 
             for collection in collections:
-                self._import_collection(client, site, collection)
+                if collection.get('collection_type').upper() != 'DATA_FEED':
+                    continue
 
+                if want_all or collection.get('collection_name').lower() in desired_collections:
+                    if not enumerate_collections_only:
+                        self._import_collection(client, site, collection)
+                    else:
+                        print "Site %s - Collection MATCHED   Name: %s - Available: %s - Description: %s" % (site.get('site'), collection.get('collection_name'), collection.get('available'), collection.get('collection_description', ''))
+                else: # only print
+                    if enumerate_collections_only:
+                        print "Site %s - Collection (skipped) Name: %s - Available: %s - Description: %s" % (site.get('site'), collection.get('collection_name'), collection.get('available'), collection.get('collection_description', ''))
 
 @contextmanager
 def file_lock(lock_file):
@@ -381,7 +410,7 @@ def file_lock(lock_file):
         finally:
             os.remove(lock_file)
 
-def runner(configpath, export_mode, loglevel=logging.DEBUG):
+def runner(configpath, export_mode, enumerate_only=False, loglevel=logging.DEBUG):
     with file_lock('/var/run/cb/cbtaxii.py.pid'):
         global _logger
         if export_mode:
@@ -397,7 +426,7 @@ def runner(configpath, export_mode, loglevel=logging.DEBUG):
             if not export_mode:
                 print "CbTaxii %s Running (could take a while).  Check status: /var/log/cb/integrations/cbtaxii/cbtaxii.log" % __version__
             cbt = CbTaxiiFeedConverter(configpath, export_mode)
-            return cbt.perform()
+            return cbt.perform(enumerate_only)
         except:
             _logger.error("%s" % traceback.format_exc())
             return -1
