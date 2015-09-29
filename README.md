@@ -40,13 +40,14 @@ Take the following steps to install the Carbon Black Taxii Connector:
 
 1. Install the CbOpenSource.repo file found in the root of this repository (place it in /etc/yum.repos.d/ on your head CB Server node.)
 2. Install by issuing the following command as root (or sudo): yum install python-cbtaxii -y
-3. You’ll likely see several packages installed when you issue the command from #2.
-	
+
 ## Upgrades
 
 When an upgrade is available, it should be as easy as doing the following:
 
     yum install python-cbtaxii -y
+
+* *Note* Upgrading from 1.0/1.1 to 1.2, you'll need to supply auth_token=<CB Server Admin API Token> in the config file under the cbconfig directive.
 
 Please note that a new /etc/cb/integrations/cbtaxii/cbtaxii.conf.example might be made available in some cases, at which point any new settings should be studied, understood, and applied to the production configuration file if necessary.
 
@@ -95,7 +96,10 @@ From here, one or more TAXII services can be configured. The example configurati
     
     # password for auth 
     password=avalanche
-    
+
+    # you can optionally specify which collections to convert to feeds (comma-delimited)
+    collections=*
+
     # the output path for the feeds, probably leave this alone 
     output_path=/usr/share/cb/integrations/cbtaxii/feeds/
     
