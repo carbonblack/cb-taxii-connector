@@ -47,7 +47,7 @@ When an upgrade is available, it should be as easy as doing the following:
 
     yum install python-cbtaxii -y
 
-* *Note* Upgrading from 1.0/1.1 to 1.2, you'll need to supply auth_token=<CB Server Admin API Token> in the config file under the cbconfig directive.
+* *Note* Upgrading from 1.0/1.1 to 1.2, you'll need to supply auth_token=(CB Server Admin API Token) in the config file under the cbconfig directive.
 
 Please note that a new /etc/cb/integrations/cbtaxii/cbtaxii.conf.example might be made available in some cases, at which point any new settings should be studied, understood, and applied to the production configuration file if necessary.
 
