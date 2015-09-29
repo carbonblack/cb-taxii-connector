@@ -73,7 +73,9 @@ class CbTaxiiFeedConverter(object):
             if config.has_option("cbconfig", "server_port"):
                 self.server_port = config.getint("cbconfig", "server_port")
 
-        self.api_token = config.get("cbconfig", "auth_token")
+        self.api_token = None
+        if config.has_option("cbconfig", "auth_token"):
+            self.api_token = config.get("cbconfig", "auth_token")
 
         for section in config.sections():
             # don't do cbconfig
