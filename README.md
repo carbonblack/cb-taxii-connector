@@ -73,6 +73,9 @@ From here, one or more TAXII services can be configured. The example configurati
     #(API port is usually the same port that you login using for the UI) 
     server_port=443
     
+    # You NEED to set this to a CB Server Admin API Token
+    auth_token=
+    
     #
     # Put each site into its own configuration section.
     # You might just have a single site, like soltra edge or a remote taxii server
