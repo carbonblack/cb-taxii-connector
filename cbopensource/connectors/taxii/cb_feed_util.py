@@ -88,6 +88,15 @@ class FeedHelper(object):
         feed_details_file.write(json.dumps(self.feed_details))
         feed_details_file.close()
 
+def remove_duplicate_reports(reports):
+    out_reports = []
+    reportids = set()
+    for report in reports:
+        if report['id'] in reportids:
+            continue
+        reportids.add(report['id'])
+        out_reports.append(report)
+    return out_reports
 
 def build_feed_data(feed_name, feed_description, site, icon_link, reports):
     """
@@ -103,29 +112,7 @@ def build_feed_data(feed_name, feed_description, site, icon_link, reports):
 
     feedinfo = CbFeedInfo(**feedinfo)
 
+    reports = remove_duplicate_reports(reports)
+
     feed = CbFeed(feedinfo, reports)
     return feed.dump()
-
-
-def lookup_admin_api_token():
-    """
-    requires being on the cb server itself.
-    """
-    from cb.utils import Config
-    from cb.utils.db import db_session_context
-    from cb.db.core_models import User
-
-    cfg = Config()
-    cfg.load('/etc/cb/cb.conf')
-    db_session_context = db_session_context(cfg)
-    db_session = db_session_context.get()
-
-    user = db_session.query(User).filter(User.global_admin == True).first()
-
-    api_token = user.auth_token
-
-    db_session_context.finish()
-
-    return api_token
-
-

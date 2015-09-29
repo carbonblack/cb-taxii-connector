@@ -1,4 +1,0 @@
-recursive-include src/cbtaxii/ *
-recursive-include src/root/etc *
-recursive-include src/root/usr *
-recursive-include src/root/var *

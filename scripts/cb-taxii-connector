@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+#The MIT License (MIT)
+#
+# Copyright (c) 2015 Bit9 + Carbon Black
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+
+import optparse
+from cbopensource.connectors.taxii.bridge import runner, runner_import
+from cbopensource.connectors.taxii.version import __version__
+import sys
+import os
+
+def build_cli_parser():
+    parser = optparse.OptionParser(usage="%prog [options]", description="Set status to Resolved for a set of alerts.")
+
+    # for each supported output type, add an option
+    #
+    parser.add_option("-c", "--config", action="store", default=None, dest="configpath",
+                      help="CBTaxii ocnfig file")
+
+    parser.add_option("-e", "--export", action="store_true", default=False, dest="export_mode", help="Export mode (will not update feed).")
+
+    parser.add_option("-i", "--import", action="store", default=None, dest="importdir", help="Parse XML from files")
+
+    parser.add_option("-l", "--list", action="store_true", default=False, dest="enumerate_collections_only", help="Enumerate available collections and exit")
+
+    parser.add_option("-v", "--version", action="store_true", default=False, dest="version",
+                      help="Do not verify server SSL certificate.")
+
+    return parser
+
+if __name__ == "__main__":
+    # set the path to the CA certificate PEM file to our local cache
+    cacert_pem_path = "/usr/share/cb/integrations/cbtaxii/cacert.pem"
+    if os.path.isfile(cacert_pem_path):
+        os.environ["REQUESTS_CA_BUNDLE"] = cacert_pem_path
+
+    parser = build_cli_parser()
+    opts, args = parser.parse_args(sys.argv)
+    if not opts.version and not opts.configpath and not opts.importdir:
+        print "Missing required param!"
+        parser.print_help()
+        sys.exit(-1)
+
+    # IF VERSION
+    if opts.version:
+        print "CB Taxii Service Connector, Version: %s" % __version__
+        sys.exit(-1)
+
+    if opts.importdir:
+        runner_import(opts.importdir)
+    elif runner(opts.configpath, opts.export_mode, opts.enumerate_collections_only):
+        sys.exit(0)
+    else:
+        sys.exit(1)
