@@ -88,6 +88,15 @@ class FeedHelper(object):
         feed_details_file.write(json.dumps(self.feed_details))
         feed_details_file.close()
 
+def remove_duplicate_reports(reports):
+    out_reports = []
+    reportids = set()
+    for report in reports:
+        if report['id'] in reportids:
+            continue
+        reportids.add(report['id'])
+        out_reports.append(report)
+    return out_reports
 
 def build_feed_data(feed_name, feed_description, site, icon_link, reports):
     """
@@ -102,6 +111,8 @@ def build_feed_data(feed_name, feed_description, site, icon_link, reports):
                 }
 
     feedinfo = CbFeedInfo(**feedinfo)
+
+    reports = remove_duplicate_reports(reports)
 
     feed = CbFeed(feedinfo, reports)
     return feed.dump()

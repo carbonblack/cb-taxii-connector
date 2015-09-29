@@ -178,7 +178,7 @@ def observable_to_json(observable, enable_ip_ranges, logger):
                     for hash in props.Hashes.Hash:
                         hash_type = hash.Type.valueOf_.lower().strip()
                         if hash_type == 'md5':
-                            iocs['hash'] = [hash.Simple_Hash_Value.valueOf_]
+                            iocs['md5'] = [hash.Simple_Hash_Value.valueOf_]
     except:
         logger.warn("Caught exception parsing observable: %s" % traceback.format_exc())
     return iocs
@@ -271,6 +271,14 @@ def validate_iocs(iocs, id, logger=None):
             iocs["dns"] = valid_domains
         else:
             del iocs["dns"]
+
+    # CHECK FOR EMPTY IOCS
+    if len(iocs.get('dns', [])) == 0 and \
+       len(iocs.get('ipv4', [])) == 0 and \
+       len(iocs.get('md5', [])) == 0 and \
+       len(iocs.get('query', [])) == 0:
+        return {}
+
     return iocs
 
 def stix_element_to_reports(elem, site, site_url, collection, enable_ip_ranges, logger):
@@ -310,8 +318,7 @@ def stix_element_to_reports(elem, site, site_url, collection, enable_ip_ranges, 
                     id = cleanup_string(observable.id)
                     iocs = observable_to_json(observable, enable_ip_ranges, logger)
                     iocs = validate_iocs(iocs, id, logger)
-                    if len(iocs):
-
+                    if len(iocs) > 0:
                         timestamp = str(stix_package_obj.timestamp)
                         timestamp = parser.parse(timestamp)
                         epoch_seconds = total_seconds(timestamp)

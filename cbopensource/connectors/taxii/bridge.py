@@ -284,6 +284,7 @@ class CbTaxiiFeedConverter(object):
                                               len(reports)))
 
         if not self.export_mode:
+
             # TODO -- clean this up
             if len(reports) > 0:
                 # load existing data and convert new data
@@ -350,8 +351,8 @@ class CbTaxiiFeedConverter(object):
                 if "query" in iocs:
                     print "%s - %s" % (site, iocs['query'])
 
-                if "hash" in iocs:
-                    print "%s - %s" % (site, iocs['hash'])
+                if "md5" in iocs:
+                    print "%s - %s" % (site, iocs['md5'])
 
     def perform(self, enumerate_collections_only=False):
         """
