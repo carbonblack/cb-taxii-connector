@@ -82,7 +82,18 @@ class CbTaxiiFeedConverter(object):
             if section.lower() == 'cbconfig':
                 continue
 
-            site = config.get(section, "site")
+            # get site and strip off preceeding http(s):// if necessary
+            site = config.get(section, "site").lower()
+
+            if site.startswith("https://"):
+                site = site[8:]
+
+            if site.startswith("http://"):
+                site = site[7:]
+
+            if site.endswith("/"):
+                site = site.strip("/")
+
             output_path = config.get(section, "output_path")
             icon_link = config.get(section, "icon_link")
             username = config.get(section, "username")
@@ -153,7 +164,7 @@ class CbTaxiiFeedConverter(object):
             return
 
         if len(self.api_token) == 0:
-            _logger.error("auth_token cannot be empty!")
+            _logger.error("***** auth_token setting in config file cannot be empty! *****")
             sys.exit(-1)
 
         server_url = "https://127.0.0.1:%d/" % self.server_port

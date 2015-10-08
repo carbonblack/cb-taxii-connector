@@ -20,10 +20,12 @@ auth_token=
 
 [soltraedge]
 
-# the address of the site (server ip or dns)
+# the address of the site (server ip or dns; do not put http(s):// here)
+# we prepend http or https accordingly, and append /taxii-discovery-service
+#
 site=192.168.230.205
 
-# change to true if you require https
+# change to true if you require https versus http
 use_https=false
 
 # if you need SSL certificates for authentication, set the path of the
