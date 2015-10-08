@@ -51,7 +51,10 @@ class TaxiiClient(object):
         self.base_domain = base_domain
         self.discovery_request_uri = "/taxii-discovery-service"
         self.poll_request_uri = "/taxii-data"
-        self.base_url = "https://%s" % self.base_domain
+        if use_https:
+            self.base_url = "https://%s" % self.base_domain
+        else:
+            self.base_url = "http://%s" % self.base_domain
         self.username = username
         self.password = password
         self.key_file = None
@@ -145,7 +148,7 @@ def observable_to_json(observable, enable_ip_ranges, logger):
                     logger.warn("Props.value is None!")
 
             elif type(props) == cybox.bindings.address_object.AddressObjectType:
-                if props.category != 'ipv4-net':
+                if props.category != 'ipv4-net' and props.category != 'ipv4-addr':
                     return iocs
 
                 hits = []
@@ -160,7 +163,7 @@ def observable_to_json(observable, enable_ip_ranges, logger):
                         logger.warn("pops.Address_Value.apply_condition == None!")
 
                 else:
-                    hits = [props.Address_Value.valueOf_]
+                    hits = [str(props.Address_Value.valueOf_).strip()]
 
                 if len(hits) == 2:
                     if props.Address_Value.condition.lower().strip() == 'inclusivebetween':
@@ -178,7 +181,7 @@ def observable_to_json(observable, enable_ip_ranges, logger):
                     for hash in props.Hashes.Hash:
                         hash_type = hash.Type.valueOf_.lower().strip()
                         if hash_type == 'md5':
-                            iocs['md5'] = [hash.Simple_Hash_Value.valueOf_]
+                            iocs['md5'] = [str(hash.Simple_Hash_Value.valueOf_).strip()]
     except:
         logger.warn("Caught exception parsing observable: %s" % traceback.format_exc())
     return iocs
@@ -192,6 +195,7 @@ def validate_iocs(iocs, id, logger=None):
     if "md5" in iocs:
         valid_md5s = []
         for md5 in iocs.get("md5", []):
+            md5 = md5.strip()
             if 32 != len(md5):
                 if logger:
                     logger.warn("Invalid md5 length for md5 (%s) for report %s" % (md5, id))
@@ -218,6 +222,7 @@ def validate_iocs(iocs, id, logger=None):
         valid_ipv4s = []
 
         for ip in iocs.get("ipv4", []):
+            ip = ip.strip()
             try:
                 socket.inet_aton(ip)
                 valid_ipv4s.append(ip)
@@ -239,6 +244,7 @@ def validate_iocs(iocs, id, logger=None):
         # O'Reilly's DNS and Bind Chapter 4 Section 5:
         # "Names that are not host names can consist of any printable ASCII character."
         for domain in iocs.get("dns", []):
+            domain = domain.strip()
             if len(domain) > 255:
                 if logger:
                     logger.warn(
