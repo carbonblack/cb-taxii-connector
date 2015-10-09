@@ -83,7 +83,8 @@ From here, one or more TAXII services can be configured. The example configurati
     #
     
     [soltraedge]
-    # the address of the site (server ip or dns) 
+    # the address of the site (only server ip or dns; don't put https:// or a trailing slash) 
+    # for example, site=analysis.fsisac.com
     site=192.168.230.205
     
     # change to true if you require https for your TAXII service connection 
