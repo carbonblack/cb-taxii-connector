@@ -72,6 +72,7 @@ class CbTaxiiFeedConverter(object):
         if config.has_section("cbconfig"):
             if config.has_option("cbconfig", "server_port"):
                 self.server_port = config.getint("cbconfig", "server_port")
+        self.server_url = "https://127.0.0.1:%d" % self.server_port
 
         self.api_token = None
         if config.has_option("cbconfig", "auth_token"):
@@ -167,16 +168,15 @@ class CbTaxiiFeedConverter(object):
             _logger.error("***** auth_token setting in config file cannot be empty! *****")
             sys.exit(-1)
 
-        server_url = "https://127.0.0.1:%d/" % self.server_port
-        _logger.info("Using Server URL: %s" % server_url)
-        self.cb = CbApi(server_url, token=self.api_token, ssl_verify=False)
+        _logger.info("Using Server URL: %s" % self.server_url)
+        self.cb = CbApi(self.server_url, token=self.api_token, ssl_verify=False)
         try:
             # TEST CB CONNECTIVITY
             self.cb.feed_enum()
         except:
             e = traceback.format_exc()
-            _logger.error("Unable to connect to CB using url: %s Error: %s" % (server_url, e))
-            print("Unable to connect to CB using url: %s Error: %s" % (server_url, e))
+            _logger.error("Unable to connect to CB using url: %s Error: %s" % (self.server_url, e))
+            print("Unable to connect to CB using url: %s Error: %s" % (self.server_url, e))
             sys.exit(-1)
 
     @staticmethod
@@ -324,7 +324,7 @@ class CbTaxiiFeedConverter(object):
 
                     # FEED ALERTING!!
                     feed_id = data.get('id')
-                    url = "https://127.0.0.1/api/v1/feed/%d/action" % feed_id
+                    url = "%s/api/v1/feed/%d/action" % (self.server_url, feed_id)
                     alert_types = site.get('feeds_alerting', '').split(',')
                     headers = {'X-Auth-Token' : self.api_token, "Accept" : "application/json"}
                     for alert in alert_types:
