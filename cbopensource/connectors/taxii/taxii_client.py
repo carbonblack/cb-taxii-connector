@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2015 Bit9 + Carbon Black
 #
@@ -35,6 +35,8 @@ import stix.bindings.stix_core as stix_core_binding
 import socket
 import string
 import traceback
+import requests
+
 
 class UnauthorizedException(Exception):
     def __init__(self, text):
@@ -42,6 +44,7 @@ class UnauthorizedException(Exception):
 
     def __str__(self):
         return "UnauthorizedException: %s" % self.text
+
 
 class TaxiiClient(object):
     def __init__(self, base_domain, username, password, use_https=False, key_file=None, cert_file=None):
@@ -64,12 +67,16 @@ class TaxiiClient(object):
             self.key_file = key_file
             self.cert_file = cert_file
 
+        self.session = self.__instantiate_http_client(username, password,
+
         self.headers = {"Content-Type": "application/xml",
                         "User-Agent": "TAXII Client Application",
                         "Accept": "application/xml",
                         "X-TAXII-Accept": "TAXII_1.0/TAXII_XML_BINDING_1.0",
                         "X-TAXII-Content-Type": "TAXII_1.0/TAXII_XML_BINDING_1.0",
                         "X-TAXII-Protocol": "TAXII_HTTPS_BINDING_1.0"}
+
+        self.session = self.__instantiate_http_client(username, password, cert_file, key_file)
 
     def __instantiate_http_client(self):
         client = taxii_clients.HttpClient()
@@ -84,34 +91,37 @@ class TaxiiClient(object):
 
         return client
 
+    def
     def enumerate_collections(self, _logger):
         client = self.__instantiate_http_client()
 
         collection_request = tm11.CollectionInformationRequest(tm11.generate_message_id())
         collection_xml = collection_request.to_xml()
-        http_resp = client.callTaxiiService2(self.base_domain,
-                                             self.discovery_request_uri,
-                                             taxii.VID_TAXII_XML_11,
-                                             collection_xml)
-        message = taxii.get_message_from_http_response(http_resp, collection_request.message_id)
 
-        if type(message) == tm11.StatusMessage:
-            t = message.to_text()
-            x = getattr(message, 'status_type', None)
-            if x:
-                _logger.warn("Message response: %s" % x)
-            raise UnauthorizedException(t)
-
-        x = message.to_dict()
-        return x.get('collection_informations', [])
+        # TODO: FIX
+        # http_resp = client.callTaxiiService2(self.base_domain,
+        #                                      self.discovery_request_uri,
+        #                                      taxii.VID_TAXII_XML_11,
+        #                                      collection_xml)
+        # message = taxii.get_message_from_http_response(http_resp, collection_request.message_id)
+        #
+        # if type(message) == tm11.StatusMessage:
+        #     t = message.to_text()
+        #     x = getattr(message, 'status_type', None)
+        #     if x:
+        #         _logger.warn("Message response: %s" % x)
+        #     raise UnauthorizedException(t)
+        #
+        # x = message.to_dict()
+        # return x.get('collection_informations', [])
 
     def retrieve_collection(self, collection_name, start_date, end_date):
         client = self.__instantiate_http_client()
 
         poll_params1 = tm11.PollParameters(
-                                        allow_asynch=False,
-                                        response_type=tm11.RT_FULL,
-                                        content_bindings=[tm11.ContentBinding(binding_id=taxii.CB_STIX_XML_11)])
+                allow_asynch=False,
+                response_type=tm11.RT_FULL,
+                content_bindings=[tm11.ContentBinding(binding_id=taxii.CB_STIX_XML_11)])
 
         poll_request = tm11.PollRequest(tm11.generate_message_id(),
                                         exclusive_begin_timestamp_label=start_date,
@@ -120,12 +130,14 @@ class TaxiiClient(object):
                                         poll_parameters=poll_params1)
 
         poll_xml = poll_request.to_xml()
-        http_resp = client.callTaxiiService2(self.base_domain, self.poll_request_uri, taxii.VID_TAXII_XML_11, poll_xml)
-        return http_resp.read()
+        # TODO: FIX
+        # http_resp = client.callTaxiiService2(self.base_domain, self.poll_request_uri, taxii.VID_TAXII_XML_11, poll_xml)
+        # return http_resp.read()
 
 
 def total_seconds(td):
     return time.mktime(td.timetuple())
+
 
 def observable_to_json(observable, enable_ip_ranges, logger):
     iocs = {}
@@ -158,7 +170,8 @@ def observable_to_json(observable, enable_ip_ranges, logger):
                             delim = props.Address_Value.delimiter
                             hits = props.Address_Value.valueOf_.split(delim)
                         else:
-                            logger.warn("props.Address_Value.apply_condition: %s" % props.Address_Value.apply_condition.lower().strip())
+                            logger.warn(
+                                "props.Address_Value.apply_condition: %s" % props.Address_Value.apply_condition.lower().strip())
                     else:
                         logger.warn("pops.Address_Value.apply_condition == None!")
 
@@ -169,12 +182,13 @@ def observable_to_json(observable, enable_ip_ranges, logger):
                     if props.Address_Value.condition.lower().strip() == 'inclusivebetween':
                         if enable_ip_ranges:
                             index_type = "events"
-                            search_query = "cb.urlver=1&q=ipaddr%%3A%%5B%s%%20TO%%20%s%%5D&sort=start%%20desc&rows=10&start=0" % (hits[0], hits[1])
+                            search_query = "cb.urlver=1&q=ipaddr%%3A%%5B%s%%20TO%%20%s%%5D&sort=start%%20desc&rows=10&start=0" % (
+                            hits[0], hits[1])
                             iocs['query'] = [{'index_type': index_type, 'search_query': search_query}]
                     else:
                         logger.warn("ipv4, condition: %s" % props.Address_Value.condition)
                 elif len(hits) == 1:
-                    iocs['ipv4'] = hits #(props.Address_Value.condition, hits)
+                    iocs['ipv4'] = hits  # (props.Address_Value.condition, hits)
 
             elif type(props) == cybox.bindings.file_object.FileObjectType:
                 if props.Hashes is not None:
@@ -186,7 +200,9 @@ def observable_to_json(observable, enable_ip_ranges, logger):
         logger.warn("Caught exception parsing observable: %s" % traceback.format_exc())
     return iocs
 
+
 domain_allowed_chars = string.printable[:-6]
+
 
 def validate_iocs(iocs, id, logger=None):
     # validate all md5 fields are 32 characters, just alphanumeric, and
@@ -215,7 +231,6 @@ def validate_iocs(iocs, id, logger=None):
             iocs["md5"] = valid_md5s
         else:
             del iocs["md5"]
-
 
     # validate all IPv4 fields pass socket.inet_ntoa()
     if "ipv4" in iocs:
@@ -248,13 +263,13 @@ def validate_iocs(iocs, id, logger=None):
             if len(domain) > 255:
                 if logger:
                     logger.warn(
-                        "Excessively long domain name (%s) in IOC list for report %s" % (domain, id))
+                            "Excessively long domain name (%s) in IOC list for report %s" % (domain, id))
                 continue
 
             if not all([c in domain_allowed_chars for c in domain]):
                 if logger:
                     logger.warn(
-                    "Malformed domain name (%s) in IOC list for report %s" % (domain, id))
+                            "Malformed domain name (%s) in IOC list for report %s" % (domain, id))
                 continue
 
             labels = domain.split('.')
@@ -267,7 +282,7 @@ def validate_iocs(iocs, id, logger=None):
                 if len(label) < 1 or len(label) > 63:
                     if logger:
                         logger.warn("Invalid label length (%s) in domain name (%s) for report %s" % (
-                        label, domain, id))
+                            label, domain, id))
                     cont_again = True
                     break
             if cont_again:
@@ -280,12 +295,13 @@ def validate_iocs(iocs, id, logger=None):
 
     # CHECK FOR EMPTY IOCS
     if len(iocs.get('dns', [])) == 0 and \
-       len(iocs.get('ipv4', [])) == 0 and \
-       len(iocs.get('md5', [])) == 0 and \
-       len(iocs.get('query', [])) == 0:
+                    len(iocs.get('ipv4', [])) == 0 and \
+                    len(iocs.get('md5', [])) == 0 and \
+                    len(iocs.get('query', [])) == 0:
         return {}
 
     return iocs
+
 
 def stix_element_to_reports(elem, site, site_url, collection, enable_ip_ranges, logger):
     stix_package_obj = stix_core_binding.STIXType().factory()
@@ -299,54 +315,55 @@ def stix_element_to_reports(elem, site, site_url, collection, enable_ip_ranges, 
     reports = []
 
     if stix_package_obj.Observables:
-            observables = stix_package_obj.Observables
-            for observable in observables.Observable:
-                data = {}
-                if observable.Observable_Composition:
-                    iocs = {}
-                    if observable.Observable_Composition.operator.lower().strip() != 'or':
-                        if logger:
-                            logger.warn("OPERATOR - %s - %s" % (site, observable.Observable_Composition.operator))
-                        continue
+        observables = stix_package_obj.Observables
+        for observable in observables.Observable:
+            data = {}
+            if observable.Observable_Composition:
+                iocs = {}
+                if observable.Observable_Composition.operator.lower().strip() != 'or':
+                    if logger:
+                        logger.warn("OPERATOR - %s - %s" % (site, observable.Observable_Composition.operator))
+                    continue
 
-                    for subobserv in observable.Observable_Composition.Observable:
-                        subdata = observable_to_json(subobserv, enable_ip_ranges, logger)
-                        iocs.update(subdata)
+                for subobserv in observable.Observable_Composition.Observable:
+                    subdata = observable_to_json(subobserv, enable_ip_ranges, logger)
+                    iocs.update(subdata)
 
-                    if len(iocs) > 0:
-                        # TODO - validate IOCs
-#                        iocs = validate_iocs(iocs, id, logger)
-                        if logger:
-                            logger.warn("%s - Composite - %s" % (site, data))
+                if len(iocs) > 0:
+                    # TODO - validate IOCs
+                    #                        iocs = validate_iocs(iocs, id, logger)
+                    if logger:
+                        logger.warn("%s - Composite - %s" % (site, data))
                         # TODO -- INCLUDE THESE!!!
 
-                else: # INDIVIDUAL
-                    id = cleanup_string(observable.id)
-                    iocs = observable_to_json(observable, enable_ip_ranges, logger)
-                    iocs = validate_iocs(iocs, id, logger)
-                    if len(iocs) > 0:
-                        timestamp = str(stix_package_obj.timestamp)
-                        timestamp = parser.parse(timestamp)
-                        epoch_seconds = total_seconds(timestamp)
-                        data['id'] = id
-                        data['score'] = 50
-                        data['link'] = site_url
-                        data['iocs'] = iocs
-                        if observable.Description:
-                            data['title'] = observable.Description.valueOf_
-                        else:
-                            data['title'] = '%s entry %s' % (site, id)
-                        data['timestamp'] = int(epoch_seconds)
-                        #logger.debug("IOCS, %s-%s, %s" % (site, collection, data))
-                        reports.append(data)
+            else:  # INDIVIDUAL
+                id = cleanup_string(observable.id)
+                iocs = observable_to_json(observable, enable_ip_ranges, logger)
+                iocs = validate_iocs(iocs, id, logger)
+                if len(iocs) > 0:
+                    timestamp = str(stix_package_obj.timestamp)
+                    timestamp = parser.parse(timestamp)
+                    epoch_seconds = total_seconds(timestamp)
+                    data['id'] = id
+                    data['score'] = 50
+                    data['link'] = site_url
+                    data['iocs'] = iocs
+                    if observable.Description:
+                        data['title'] = observable.Description.valueOf_
+                    else:
+                        data['title'] = '%s entry %s' % (site, id)
+                    data['timestamp'] = int(epoch_seconds)
+                    # logger.debug("IOCS, %s-%s, %s" % (site, collection, data))
+                    reports.append(data)
     return reports
+
 
 def fast_xml_iter(context, func, site, site_url, collection, enable_ip_ranges, logger):
     count = 0
     results = []
     try:
         for event, elem in context:
-            results.extend( func(elem, site, site_url, collection, enable_ip_ranges, logger) )
+            results.extend(func(elem, site, site_url, collection, enable_ip_ranges, logger))
             count += 1
             elem.clear()
             while elem.getprevious() is not None:
@@ -355,5 +372,3 @@ def fast_xml_iter(context, func, site, site_url, collection, enable_ip_ranges, l
         pass
     del context
     return results
-
-
