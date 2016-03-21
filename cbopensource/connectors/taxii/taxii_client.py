@@ -124,7 +124,6 @@ class TaxiiClient(object):
         else:
             taxii_content_type = resp.headers.get('X-TAXII-Content-Type')
             _, params = cgi.parse_header(resp.headers.get('Content-Type'))
-            encoding = params.get('charset', 'utf-8')
             response_message = resp.content
 
             if taxii_content_type is None:  # Treat it as a Failure Status Message, per the spec
@@ -140,9 +139,9 @@ class TaxiiClient(object):
                 return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
                                           status_type=taxii.ST_FAILURE, message=m)
             elif taxii_content_type == taxii.VID_TAXII_XML_10:  # It's a TAXII XML 1.0 message
-                return tm10.get_message_from_xml(response_message, encoding)
+                return tm10.get_message_from_xml(response_message)
             elif taxii_content_type == taxii.VID_TAXII_XML_11:  # It's a TAXII XML 1.1 message
-                return tm11.get_message_from_xml(response_message, encoding)
+                return tm11.get_message_from_xml(response_message)
             else:
                 raise ValueError('Unsupported X-TAXII-Content-Type: %s' % taxii_content_type)
 
