@@ -113,14 +113,17 @@ class TaxiiClient(object):
         try:
             post_data = request_data.to_xml()
             resp = self.do_taxii_request(path, message_binding, post_data, content_type)
-        except requests.HTTPError:
-            pass
-        except requests.ConnectionError:
-            pass
-        except AttributeError:
-            pass # request_data invalid
-        except Exception:
-            pass
+        except requests.HTTPError as he:
+            return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
+                                      status_type=taxii.ST_FAILURE, message="HTTP error: %s" % he.message)
+        except requests.ConnectionError as ce:
+            return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
+                                      status_type=taxii.ST_FAILURE, message="Could not connect: %s" % ce.message)
+        except AttributeError as ae:
+            return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
+                                      status_type=taxii.ST_FAILURE, message="Request data invalid: %s" % ae.message)
+        except Exception as e:
+            raise e
         else:
             taxii_content_type = resp.headers.get('X-TAXII-Content-Type')
             _, params = cgi.parse_header(resp.headers.get('Content-Type'))
