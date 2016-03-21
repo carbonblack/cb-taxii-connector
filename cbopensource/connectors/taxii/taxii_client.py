@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import cgi
 
 from util import cleanup_string
 from lxml import etree
@@ -30,6 +31,7 @@ from dateutil import parser
 import libtaxii as taxii
 import libtaxii.clients as taxii_clients
 import libtaxii.messages_11 as tm11
+import libtaxii.messages_10 as tm10
 import cybox
 import stix.bindings.stix_core as stix_core_binding
 import socket
@@ -58,6 +60,19 @@ class TaxiiClient(object):
             self.base_url = "https://%s" % self.base_domain
         else:
             self.base_url = "http://%s" % self.base_domain
+
+        self.content_type_map = {
+            taxii.VID_TAXII_XML_10: 'application/xml',
+            taxii.VID_TAXII_XML_11: 'application/xml',
+            taxii.VID_CERT_EU_JSON_10: 'application/json'
+        }
+
+        self.services_map = {
+            taxii.VID_TAXII_XML_10: taxii.VID_TAXII_SERVICES_10,
+            taxii.VID_TAXII_XML_11: taxii.VID_TAXII_SERVICES_11,
+            taxii.VID_CERT_EU_JSON_10: taxii.VID_TAXII_SERVICES_10
+        }
+
         self.username = username
         self.password = password
         self.key_file = None
@@ -67,57 +82,106 @@ class TaxiiClient(object):
             self.key_file = key_file
             self.cert_file = cert_file
 
-        self.session = self.__instantiate_http_client(username, password,
-
         self.headers = {"Content-Type": "application/xml",
-                        "User-Agent": "TAXII Client Application",
+                        "User-Agent": "carbonblack-taxii-connector",
                         "Accept": "application/xml",
                         "X-TAXII-Accept": "TAXII_1.0/TAXII_XML_BINDING_1.0",
                         "X-TAXII-Content-Type": "TAXII_1.0/TAXII_XML_BINDING_1.0",
-                        "X-TAXII-Protocol": "TAXII_HTTPS_BINDING_1.0"}
+                        "Connection": "keep-alive",
+                        "Accept-Encoding": "gzip, deflate"
+        }
+        if self.use_https:
+            self.headers["X-TAXII-Protocol"] = taxii.VID_TAXII_HTTPS_10
+        else:
+            self.headers["X-TAXII-Protocol"] = taxii.VID_TAXII_HTTP_10
 
-        self.session = self.__instantiate_http_client(username, password, cert_file, key_file)
+        self.session = self.__instantiate_http_client()
 
     def __instantiate_http_client(self):
-        client = taxii_clients.HttpClient()
-        client.setAuthType(taxii_clients.HttpClient.AUTH_BASIC)
-        client.setUseHttps(self.use_https)
-        creds = {'username': self.username, 'password': self.password}
+        s = requests.Session()
+        if self.username and self.password:
+            s.auth = (self.username, self.password)
+
         if self.key_file and self.cert_file:
-            creds['key_file'] = self.key_file
-            creds['cert_file'] = self.cert_file
+            s.cert = (self.cert_file, self.key_file)
 
-        client.setAuthCredentials(creds)
+        s.headers = self.headers
 
-        return client
+        return s
 
-    def
+    def taxii_request(self, path, message_binding, request_data, content_type=None):
+        try:
+            post_data = request_data.to_xml()
+            resp = self.do_taxii_request(path, message_binding, post_data, content_type)
+        except requests.HTTPError:
+            pass
+        except requests.ConnectionError:
+            pass
+        except AttributeError:
+            pass # request_data invalid
+        except Exception:
+            pass
+        else:
+            taxii_content_type = resp.headers.get('X-TAXII-Content-Type')
+            _, params = cgi.parse_header(resp.headers.get('Content-Type'))
+            encoding = params.get('charset', 'utf-8')
+            response_message = resp.content
+
+            if taxii_content_type is None:  # Treat it as a Failure Status Message, per the spec
+                message = []
+                header_tuples = resp.headers
+                for k, v in header_tuples:
+                    message.append(k + ': ' + v + '\r\n')
+                message.append('\r\n')
+                message.append(response_message)
+
+                m = ''.join(message)
+
+                return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
+                                          status_type=taxii.ST_FAILURE, message=m)
+            elif taxii_content_type == taxii.VID_TAXII_XML_10:  # It's a TAXII XML 1.0 message
+                return tm10.get_message_from_xml(response_message, encoding)
+            elif taxii_content_type == taxii.VID_TAXII_XML_11:  # It's a TAXII XML 1.1 message
+                return tm11.get_message_from_xml(response_message, encoding)
+            else:
+                raise ValueError('Unsupported X-TAXII-Content-Type: %s' % taxii_content_type)
+
+    def do_taxii_request(self, path, message_binding, post_data, content_type=None):
+        headers = {}
+        headers["X-TAXII-Content-Type"] = message_binding
+
+        if content_type:
+            headers["Content-Type"] = content_type
+        else:
+            if message_binding not in self.content_type_map:
+                raise ValueError("content_type not specified, and the message_binding is unrecognized")
+            headers["Content-Type"] = self.content_type_map[message_binding]
+
+        headers["X-TAXII-Services"] = self.services_map[message_binding]
+
+        uri = self.base_url + path
+
+        if post_data:
+            resp = self.session.post(uri, post_data, headers=headers)
+        else:
+            resp = self.session.get(uri, headers=headers)
+
+        return resp
+
     def enumerate_collections(self, _logger):
-        client = self.__instantiate_http_client()
-
         collection_request = tm11.CollectionInformationRequest(tm11.generate_message_id())
-        collection_xml = collection_request.to_xml()
+        message = self.taxii_request(self.discovery_request_uri, taxii.VID_TAXII_XML_11, collection_request)
+        if type(message) == tm11.StatusMessage:
+            t = message.to_text()
+            x = getattr(message, 'status_type', None)
+            if x:
+                _logger.warn("Message response: %s" % x)
+            raise UnauthorizedException(t)
 
-        # TODO: FIX
-        # http_resp = client.callTaxiiService2(self.base_domain,
-        #                                      self.discovery_request_uri,
-        #                                      taxii.VID_TAXII_XML_11,
-        #                                      collection_xml)
-        # message = taxii.get_message_from_http_response(http_resp, collection_request.message_id)
-        #
-        # if type(message) == tm11.StatusMessage:
-        #     t = message.to_text()
-        #     x = getattr(message, 'status_type', None)
-        #     if x:
-        #         _logger.warn("Message response: %s" % x)
-        #     raise UnauthorizedException(t)
-        #
-        # x = message.to_dict()
-        # return x.get('collection_informations', [])
+        x = message.to_dict()
+        return x.get('collection_informations', [])
 
     def retrieve_collection(self, collection_name, start_date, end_date):
-        client = self.__instantiate_http_client()
-
         poll_params1 = tm11.PollParameters(
                 allow_asynch=False,
                 response_type=tm11.RT_FULL,
@@ -129,10 +193,8 @@ class TaxiiClient(object):
                                         collection_name=collection_name,
                                         poll_parameters=poll_params1)
 
-        poll_xml = poll_request.to_xml()
-        # TODO: FIX
-        # http_resp = client.callTaxiiService2(self.base_domain, self.poll_request_uri, taxii.VID_TAXII_XML_11, poll_xml)
-        # return http_resp.read()
+        http_resp = self.do_taxii_request(self.poll_request_uri, taxii.VID_TAXII_XML_11, poll_request.to_xml())
+        return http_resp.content
 
 
 def total_seconds(td):
