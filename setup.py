@@ -170,7 +170,7 @@ scripts = {
 
 setup(
     name='python-cbtaxii',
-    version="1.3",
+    version="1.4",
     packages=['cbopensource', 'cbopensource.connectors', 'cbopensource.connectors.taxii'],
     url='https://github.com/carbonblack/cb-taxii-connector',
     license='MIT',

@@ -132,7 +132,7 @@ class TaxiiClient(object):
             if taxii_content_type is None:  # Treat it as a Failure Status Message, per the spec
                 message = []
                 header_tuples = resp.headers
-                for k, v in header_tuples:
+                for k, v in header_tuples.iteritems():
                     message.append(k + ': ' + v + '\r\n')
                 message.append('\r\n')
                 message.append(response_message)
