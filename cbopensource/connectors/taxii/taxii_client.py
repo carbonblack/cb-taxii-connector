@@ -49,7 +49,8 @@ class UnauthorizedException(Exception):
 
 
 class TaxiiClient(object):
-    def __init__(self, base_domain, username, password, use_https=False, key_file=None, cert_file=None):
+    def __init__(self, base_domain, username, password, use_https=False, key_file=None, cert_file=None,
+                 ssl_verify=True):
         """
         Takes a config filepath to read credential information.
         """
@@ -78,6 +79,7 @@ class TaxiiClient(object):
         self.key_file = None
         self.cert_file = None
         self.use_https = use_https
+        self.ssl_verify = ssl_verify
         if self.use_https:
             self.key_file = key_file
             self.cert_file = cert_file
@@ -106,6 +108,7 @@ class TaxiiClient(object):
             s.cert = (self.cert_file, self.key_file)
 
         s.headers = self.headers
+        s.verify = self.ssl_verify
 
         return s
 

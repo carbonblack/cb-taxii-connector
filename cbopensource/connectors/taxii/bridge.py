@@ -142,6 +142,10 @@ class CbTaxiiFeedConverter(object):
             else:
                 enable_ip_ranges = True
 
+            ssl_verify = True
+            if config.has_option(section, "sslverify"):
+                ssl_verify = config.getboolean(section, "sslverify")
+
             _logger.info("Configured Site: %s Path: %s" % (site, output_path))
 
             self.sites.append({"site": site,
@@ -157,7 +161,8 @@ class CbTaxiiFeedConverter(object):
                                "use_https": use_https,
                                "key_file": key_file,
                                "cert_file": cert_file,
-                               "minutes_to_advance": minutes_to_advance})
+                               "minutes_to_advance": minutes_to_advance,
+                               "ssl_verify": ssl_verify})
             self.cb = None
 
     def __enable_cb_api_if_necessary(self):
@@ -380,7 +385,8 @@ class CbTaxiiFeedConverter(object):
                                  site.get('password'),
                                  site.get('use_https'),
                                  site.get('key_file'),
-                                 site.get('cert_file'))
+                                 site.get('cert_file'),
+                                 site.get('ssl_verify'))
 
             desired_collections = site.get('collections').lower().split(',')
 
