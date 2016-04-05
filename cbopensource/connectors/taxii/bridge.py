@@ -146,6 +146,14 @@ class CbTaxiiFeedConverter(object):
             if config.has_option(section, "sslverify"):
                 ssl_verify = config.getboolean(section, "sslverify")
 
+            discovery_request_uri = "/taxii-discovery-service"
+            if config.has_option(section, "discovery_request_uri"):
+                discovery_request_uri = config.get(section, "discovery_request_uri")
+
+            poll_request_uri = "/taxii-data"
+            if config.has_option(section, "poll_request_uri"):
+                poll_request_uri = config.get(section, "poll_request_uri")
+
             _logger.info("Configured Site: %s Path: %s" % (site, output_path))
 
             self.sites.append({"site": site,
@@ -162,7 +170,9 @@ class CbTaxiiFeedConverter(object):
                                "key_file": key_file,
                                "cert_file": cert_file,
                                "minutes_to_advance": minutes_to_advance,
-                               "ssl_verify": ssl_verify})
+                               "ssl_verify": ssl_verify,
+                               "discovery_request_uri": discovery_request_uri,
+                               "poll_request_uri": poll_request_uri})
             self.cb = None
 
     def __enable_cb_api_if_necessary(self):

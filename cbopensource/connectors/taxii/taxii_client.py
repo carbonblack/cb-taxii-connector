@@ -50,13 +50,13 @@ class UnauthorizedException(Exception):
 
 class TaxiiClient(object):
     def __init__(self, base_domain, username, password, use_https=False, key_file=None, cert_file=None,
-                 ssl_verify=True):
+                 ssl_verify=True, discovery_request_uri="/taxii-discovery-service", poll_request_uri="/taxii-data"):
         """
         Takes a config filepath to read credential information.
         """
         self.base_domain = base_domain
-        self.discovery_request_uri = "/taxii-discovery-service"
-        self.poll_request_uri = "/taxii-data"
+        self.discovery_request_uri = discovery_request_uri
+        self.poll_request_uri = poll_request_uri
         if use_https:
             self.base_url = "https://%s" % self.base_domain
         else:
