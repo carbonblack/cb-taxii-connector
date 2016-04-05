@@ -167,9 +167,9 @@ class TaxiiClient(object):
         uri = self.base_url + path
 
         if post_data:
-            resp = self.session.post(uri, post_data, headers=headers)
+            resp = self.session.post(uri, post_data, headers=headers, verify=self.ssl_verify)
         else:
-            resp = self.session.get(uri, headers=headers)
+            resp = self.session.get(uri, headers=headers, verify=self.ssl_verify)
 
         return resp
 
