@@ -249,8 +249,9 @@ def observable_to_json(observable, enable_ip_ranges, logger):
                     if props.Address_Value.condition.lower().strip() == 'inclusivebetween':
                         if enable_ip_ranges:
                             index_type = "events"
-                            search_query = "cb.urlver=1&q=ipaddr%%3A%%5B%s%%20TO%%20%s%%5D&sort=start%%20desc&rows=10&start=0" % (
-                            hits[0], hits[1])
+                            search_query = \
+                                "cb.urlver=1&q=ipaddr%%3A%%5B%s%%20TO%%20%s%%5D&sort=start%%20desc&rows=10&start=0" \
+                                % (hits[0], hits[1])
                             iocs['query'] = [{'index_type': index_type, 'search_query': search_query}]
                     else:
                         logger.warn("ipv4, condition: %s" % props.Address_Value.condition)
