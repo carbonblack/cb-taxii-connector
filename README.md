@@ -5,14 +5,14 @@ Connector for pulling and converting STIX information from TAXII Service Provide
 You can install the pre-built RPMs via YUM by using the CB Open Source repository.
 *(See CbOpenSource.repo and put that in /etc/yum.repos.d/)*
 
-The pre-built RPM is supported via our [User eXchange (Jive)](https://community.bit9.com/groups/developer-relations) 
-and via email to dev-support@bit9.com.  
+The pre-built RPM is supported via our [User eXchange (Jive)](https://community.carbonblack.com/community/developer-relations) 
+and via email to dev-support@carbonblack.com.  
 
 ## Introduction
 
-This document describes how to install and use the Carbon Black TAXII Connector. This connector allows for the importing of STIX data by querying one or more TAXII services and retrieving that data and then converting it into CB feeds using the CB JSON format for IOCs. The job queries for available STIX/TAXII data that is newer than the last time it asked, and by default runs every hour.
+This document describes how to install and use the Cb Response TAXII Connector. This connector allows for the importing of STIX data by querying one or more TAXII services and retrieving that data and then converting it into CB feeds using the CB JSON format for IOCs. The job queries for available STIX/TAXII data that is newer than the last time it asked, and by default runs every hour.
 
-For each TAXII service, available “collections” are enumerated and a Carbon Black Feed is created. For example, if you have two TAXII services and each exposes two collections, you will have four CB feeds as a result of this connector.
+For each TAXII service, available “collections” are enumerated and a Cb Response Feed is created. For example, if you have two TAXII services and each exposes two collections, you will have four CB feeds as a result of this connector.
 
 The following IOC types are extracted from STIX data:
 
@@ -23,9 +23,9 @@ The following IOC types are extracted from STIX data:
 	
 ## Requirements
 
-This Carbon Black TAXII Connector has the following requirements:
+This Cb Response TAXII Connector has the following requirements:
 
-* *Carbon Black Enterprise Server 5.0 (or greater)* – this integration leverages API calls and feed functionality available in Carbon Black 5.0 and newer.  In order to check the version, you can run the following rpm command on your server:
+* *Carbon Black Enterprise Response Server 5.0 (or greater)* – this integration leverages API calls and feed functionality available in Cb Response 5.0 and newer.  In order to check the version, you can run the following rpm command on your server:
 
 ```
 [root@localhost ~]# rpm -qa | grep cb-enterprise
@@ -36,7 +36,7 @@ cb-enterprise-5.0.0.150122.1654-1.el6.x86_64
 
 ## Installation
 
-Take the following steps to install the Carbon Black Taxii Connector:
+Take the following steps to install the Cb Response Taxii Connector:
 
 1. Install the CbOpenSource.repo file found in the root of this repository (place it in /etc/yum.repos.d/ on your head CB Server node.)
 2. Install by issuing the following command as root (or sudo): yum install python-cbtaxii -y
@@ -144,7 +144,7 @@ have configured. When it runs it will use the current settings found in `/etc/cb
 so make sure you are careful when changing any of those settings.
 
 When you first install the connector, you might not want to wait until the hour mark for the job to run. In this case, 
-you can force the connector to run manually. As either *root* or *cb* user on the Carbon Black Server, execute the 
+you can force the connector to run manually. As either *root* or *cb* user on the Cb Response Server, execute the 
 following command:
 
 ```
@@ -177,7 +177,7 @@ If you suspect a problem, please first look at the cbtaxii connector logs found 
 
 We've seen where Soltra Edge had a user account that wasn't returning data past a particular date for a specific username.  We don't know why this was the case.  The customer created a new SoltraEdge user account and used those credentials in our connector and everything went back to working.
 
-Additionally, due to STIX being a particulary verbose format, sometimes IOCs are stored in fields that we don't expect.  This could result in some IOCs you see in your Taxii platform (such as SoltraEdge) but not show up in Carbon Black.  For this and other issues, you can export the raw XML that our connector receives so we can see how information is represented.  To export, use the following command, then contact us and we'll setup a place for you to place the exported XML for our analysis.
+Additionally, due to STIX being a particulary verbose format, sometimes IOCs are stored in fields that we don't expect.  This could result in some IOCs you see in your Taxii platform (such as SoltraEdge) but not show up in Cb Response.  For this and other issues, you can export the raw XML that our connector receives so we can see how information is represented.  To export, use the following command, then contact us and we'll setup a place for you to place the exported XML for our analysis.
 
 ```
 /usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf --export
