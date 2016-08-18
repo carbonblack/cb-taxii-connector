@@ -40,9 +40,6 @@ from taxii_client import TaxiiClient, stix_element_to_reports, fast_xml_iter, Un
 from cb_feed_util import FeedHelper, build_feed_data
 from cbapi import CbApi
 
-
-
-
 #################################################################################
 # TODO -- do we want to enable email alerting?
 
@@ -67,12 +64,10 @@ class CbTaxiiFeedConverter(object):
 
         config.read(configpath)
 
-        # SEE IF THERE's A DIFFERENT SERVER_PORT
-        self.server_port = 443
+        self.server_url = "https://127.0.0.1"
         if config.has_section("cbconfig"):
-            if config.has_option("cbconfig", "server_port"):
-                self.server_port = config.getint("cbconfig", "server_port")
-        self.server_url = "https://127.0.0.1:%d" % self.server_port
+            if config.has_option("cbconfig", "server_url"):
+                self.server_url = config.get("cbconfig", "server_url")
 
         self.api_token = None
         if config.has_option("cbconfig", "auth_token"):
@@ -263,15 +258,31 @@ class CbTaxiiFeedConverter(object):
                         message = client.retrieve_collection(collection_name, feed_helper.start_date, feed_helper.end_date)
                         t2 = time.time()
 
+                        #
+                        # This code accounts for a case found with ThreatCentral.io where the content is url encoded.
+                        # etree.fromstring can parse this data.
+                        #
+                        root = etree.fromstring(message)
+                        content = root.find('.//{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content')
+                        if content is not None and len(content) == 0 and len(list(content)) == 0:
+                            #
+                            # Content has no children.  So lets make sure we parse the xml text for content and re-add
+                            # it as valid XML so we can parse
+                            #
+                            new_stix_package = etree.fromstring(root.find("{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content_Block/{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content").text)
+                            content.append(new_stix_package)
+
+                        #
+                        # Since we modified the xml, we need create a new xml message string to parse
+                        #
+                        message = etree.tostring(root)
                         message_len = len(message)
 
                         if self.export_mode:
                             path = self._export_message_to_disk(sanitized_feed_name, feed_helper.start_date, feed_helper.end_date, message)
                             _logger.info("%s - %s - %s - %d (%f)- %s" % (feed_helper.start_date, feed_helper.end_date, collection_name, message_len, (t2-t1), path))
-                            message = None
                         else:
                             filepath = self._write_message_to_disk(message)
-                            message = None
                             site_url = "%s://%s" % ("https" if site.get('use_https') else "http", site.get('site'))
                             these_reports = self._message_to_reports(filepath, site.get('site'), site_url, collection_name, site.get('enable_ip_ranges'))
                             t3 = time.time()
@@ -396,9 +407,13 @@ class CbTaxiiFeedConverter(object):
                                  site.get('use_https'),
                                  site.get('key_file'),
                                  site.get('cert_file'),
-                                 site.get('ssl_verify'))
+                                 site.get('ssl_verify'),
+                                 site.get('discovery_request_uri'),
+                                 site.get('poll_request_uri'))
 
             desired_collections = site.get('collections').lower().split(',')
+
+            client.discover_uri()
 
             if '*' in desired_collections:
                 want_all = True

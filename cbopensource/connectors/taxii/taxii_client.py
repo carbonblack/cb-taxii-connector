@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 Bit9 + Carbon Black
+# Copyright (c) 2016 Carbon Black Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -55,8 +55,16 @@ class TaxiiClient(object):
         Takes a config filepath to read credential information.
         """
         self.base_domain = base_domain
+        #
+        # Set the next 3 uri's to discovery request uri for now
+        # We will enumerate these from the discovery request uri
+        #
         self.discovery_request_uri = discovery_request_uri
+        self.collection_request_uri = discovery_request_uri
+        self.inbox_request_uri = discovery_request_uri
+
         self.poll_request_uri = poll_request_uri
+
         if use_https:
             self.base_url = "https://%s" % self.base_domain
         else:
@@ -87,8 +95,8 @@ class TaxiiClient(object):
         self.headers = {"Content-Type": "application/xml",
                         "User-Agent": "carbonblack-taxii-connector",
                         "Accept": "application/xml",
-                        "X-TAXII-Accept": "TAXII_1.0/TAXII_XML_BINDING_1.0",
-                        "X-TAXII-Content-Type": "TAXII_1.0/TAXII_XML_BINDING_1.0",
+                        "X-TAXII-Accept": "urn:taxii.mitre.org:message:xml:1.1",
+                        "X-TAXII-Content-Type": "urn:taxii.mitre.org:message:xml:1.1",
                         "Connection": "keep-alive",
                         "Accept-Encoding": "gzip, deflate"
         }
@@ -101,8 +109,7 @@ class TaxiiClient(object):
 
     def __instantiate_http_client(self):
         s = requests.Session()
-        if self.username and self.password:
-            s.auth = (self.username, self.password)
+        s.auth = (self.username, self.password)
 
         if self.key_file and self.cert_file:
             s.cert = (self.cert_file, self.key_file)
@@ -111,6 +118,34 @@ class TaxiiClient(object):
         s.verify = self.ssl_verify
 
         return s
+
+    def discover_uri(self):
+
+        discovery_request = tm11.DiscoveryRequest(message_id=tm11.generate_message_id())
+
+        try:
+            resp = self.taxii_request(self.discovery_request_uri, taxii.VID_TAXII_XML_11, discovery_request)
+        except requests.HTTPError as he:
+            return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
+                                      status_type=taxii.ST_FAILURE, message="HTTP error: %s" % he.message)
+        except requests.ConnectionError as ce:
+            return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
+                                      status_type=taxii.ST_FAILURE, message="Could not connect: %s" % ce.message)
+        except AttributeError as ae:
+            return tm11.StatusMessage(message_id='0', in_response_to=request_data.message_id,
+                                      status_type=taxii.ST_FAILURE, message="Request data invalid: %s" % ae.message)
+        except Exception as e:
+            raise e
+
+        response_dict = resp.to_dict()
+
+        for item in response_dict.get('service_instances', []):
+            if item.get('service_type','') == 'POLL':
+                self.poll_request_uri = item.get('service_address', '')
+            elif item.get('service_type', '') == 'COLLECTION_MANAGEMENT':
+                self.collection_request_uri = item.get('service_address', '')
+            elif item.get('service_type', '') == 'INBOX':
+                self.inbox_request_uri = item.get('service_address', '')
 
     def taxii_request(self, path, message_binding, request_data, content_type=None):
         try:
@@ -129,7 +164,7 @@ class TaxiiClient(object):
             raise e
         else:
             taxii_content_type = resp.headers.get('X-TAXII-Content-Type')
-            _, params = cgi.parse_header(resp.headers.get('Content-Type'))
+            _, params = cgi.parse_header(resp.headers.get('Content-Type', 'application/xml'))
             response_message = resp.content
 
             if taxii_content_type is None:  # Treat it as a Failure Status Message, per the spec
@@ -164,7 +199,10 @@ class TaxiiClient(object):
 
         headers["X-TAXII-Services"] = self.services_map[message_binding]
 
-        uri = self.base_url + path
+        if path.startswith("http"):
+            uri = path
+        else:
+            uri = self.base_url + path
 
         if post_data:
             resp = self.session.post(uri, post_data, headers=headers, verify=self.ssl_verify)
@@ -175,7 +213,7 @@ class TaxiiClient(object):
 
     def enumerate_collections(self, _logger):
         collection_request = tm11.CollectionInformationRequest(tm11.generate_message_id())
-        message = self.taxii_request(self.discovery_request_uri, taxii.VID_TAXII_XML_11, collection_request)
+        message = self.taxii_request(self.collection_request_uri, taxii.VID_TAXII_XML_11, collection_request)
         if type(message) == tm11.StatusMessage:
             t = message.to_text()
             x = getattr(message, 'status_type', None)
