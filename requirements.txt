@@ -1,3 +1,4 @@
+cybox == 2.1.0.12
 -e git://github.com/carbonblack/cbfeeds.git#egg=cbfeeds
 -e git://github.com/carbonblack/cb-integration.git#egg=cbint
 -e git://github.com/TAXIIProject/libtaxii.git@1.1.107#egg=libtaxii
