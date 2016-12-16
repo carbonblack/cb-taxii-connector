@@ -6,70 +6,101 @@
 
 [cbconfig]
 
+#
 # Cb Response Server Url
-server_url=https://127.0.0.1
+#
+server_url=https://www.askthedragon.net
 
+#
 # You need to supply a CB global administrator API key here so that we can add our feed
-auth_token=
+#
+auth_token=a2804ba04a108d22607099b183ab244de5e2d1e6
 
 #
 # Put each site into its own configuration section.
 # You might just have a single site, like soltra edge or a remote taxii server
 #
 
-[soltraedge]
+[eclecticiq]
 
-# the address of the site (server ip or dns; do not put http(s):// here)
-# we prepend http or https accordingly, and append /taxii-discovery-service
 #
-site=192.168.230.205
+# the address of the site (server ip or dns; do not put http(s):// here)
+# we prepend http or https accordingly.
+#
+site=open.taxiistand.com
 
+#
+# Discovery path.  This is required
+#
+discovery_path=/services/poll
+
+#
+# Collection Management path.  If not specified we will try to discover.
+#
+collection_management_path=/services/collection-management
+
+#
+# Poll path.  If not specified we will try to discover.
+#
+poll_path=/services/poll
+
+#
 # change to true if you require https versus http
-use_https=false
+#
+use_https=True
 
+#
 # if you need SSL certificates for authentication, set the path of the
 # certificate and key here.  Please leave blank to ignore.
+#
 cert_file=
 key_file=
 
+#
 # the output path for the feeds, probably leave this alone
+#
 output_path=/usr/share/cb/integrations/cbtaxii/feeds/
 
+#
 # the icon link, we come with soltra and taxii icons, but if you
 # have your own, this will show up
-icon_link=/usr/share/cb/integrations/cbtaxii/soltra-logo.png
+#
+icon_link=/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
 
+#
 # username for auth
-username=admin
+#
+username=
 
+#
 # password for auth
-password=avalanche
+#
+password=
 
+#
 # collections to retrieve (* for all, otherwise comma separated list case-insensitive)
+#
 collections=*
 
+
+#
 # automatically create CB feeds, probably leave this to true
+#
 feeds_enable=true
 
-# do you want feed hits in CB to generate alerts? Available options
-# are syslog or cb, and you can do both by putting syslog,cb
-feeds_alerting=syslog,cb
-
-# there have been a lot of indicators that are whole class Cs.
-# Set this to false if you do not want to include these indicators,
-# otherwise set to true
-enable_ip_ranges=true
-
-
+#
 # (optional) the start date for which to start requesting data.
-# Defaults to 2015-01-01 00:00:00 if you supply nothing
-start_date=2015-03-01 00:00:00
+# Defaults to 2016-12-01 00:00:00 if you supply nothing
+#
+start_date=2016-12-01 00:00:00
 
+#
 # (optional) the minutes to advance for each request.  This
-# defaults to 15.  If you don't have a lot of data, you could
+# defaults to 60.  If you don't have a lot of data, you could
 # advance your requests to every 60 minutes or multiply 60 times
 # number of hours, so 1440 to ask for data in daily chunks
-minutes_to_advance=30
+#
+minutes_to_advance=1440
 
 
 ## If you want to use hailataxii
@@ -80,6 +111,6 @@ minutes_to_advance=30
 #username=guest
 #password=guest
 #feeds_enable=true
-#feeds_alerting=syslog,cb
-#start_date=2015-01-01 00:00:00
-#minutes_to_advance=120
+#start_date=2016-11-01 00:00:00
+#minutes_to_advance=1440
+#discovery_path=/taxii-discovery-service

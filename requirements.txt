@@ -1,8 +1,7 @@
-cybox == 2.1.0.12
 -e git://github.com/carbonblack/cbfeeds.git#egg=cbfeeds
--e git://github.com/carbonblack/cb-integration.git#egg=cbint
--e git://github.com/TAXIIProject/libtaxii.git@1.1.107#egg=libtaxii
--e git://github.com/STIXProject/python-stix@v1.2.0.0#egg=stix
+stix == 1.2.0.2
 requests >= 2.7.0
 simplejson
 cbapi == 0.8.0
+cabby == 0.1.16
+pyinstaller == 3.1.1
