@@ -302,6 +302,22 @@ class CbTaxiiFeedConverter(object):
                                    use_https=site.get('use_https'),
                                    discovery_path=site.get('discovery_path'))
 
+            #
+            # Set verify_ssl inside the client
+            #
+            client.set_auth(verify_ssl=site.get('ssl_verify'))
+
+            if site.get('username'):
+                #
+                # If a username is supplied use basic authentication
+                #
+                client.set_auth(username=site.get('username'), password=site.get('password'))
+            elif site.get('cert_file'):
+                #
+                # if a cert file is specified use SSL authentication
+                #
+                client.set_auth(cert_file=site.get('cert_file'), key_file=site.get('key_file'))
+
             if not site.get('collection_management_path', ''):
                 collections = client.get_collections()
             else:
