@@ -311,12 +311,12 @@ class CbTaxiiFeedConverter(object):
                 #
                 # If a username is supplied use basic authentication
                 #
-                client.set_auth(username=site.get('username'), password=site.get('password'))
+                client.set_auth(username=site.get('username'), password=site.get('password'), verify_ssl=site.get('ssl_verify'))
             elif site.get('cert_file'):
                 #
                 # if a cert file is specified use SSL authentication
                 #
-                client.set_auth(cert_file=site.get('cert_file'), key_file=site.get('key_file'))
+                client.set_auth(cert_file=site.get('cert_file'), key_file=site.get('key_file'), verify_ssl=site.get('ssl_verify'))
 
             if not site.get('collection_management_path', ''):
                 collections = client.get_collections()

@@ -89,8 +89,8 @@ def parse_config(config_file_path):
             minutes_to_advance = 60
 
         ssl_verify = True
-        if config.has_option(section, "sslverify"):
-            ssl_verify = config.getboolean(section, "sslverify")
+        if config.has_option(section, "ssl_verify"):
+            ssl_verify = config.getboolean(section, "ssl_verify")
 
         discovery_path = "/services/discovery"
         if config.has_option(section, "discovery_path"):
