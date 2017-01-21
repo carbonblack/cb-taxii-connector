@@ -91,6 +91,15 @@ def cybox_parse_observable(observable, timestamp):
     else:
         return reports
 
+    #
+    # sometimes the description is None
+    #
+
+    if observable.description:
+        description = observable.description.value
+    else:
+        description = ''
+
     if type(props) == DomainName:
         if props.value and props.value.condition and props.value.condition.lower().strip() == 'equals':
             domain_name = props.value.value.strip()
@@ -100,7 +109,7 @@ def cybox_parse_observable(observable, timestamp):
             if validate_domain_name(domain_name):
                 reports.append({'iocs': iocs,
                                 'id': sanitize_id(observable.id_),
-                                'description': observable.description.value,
+                                'description': description,
                                 'title': observable.title,
                                 'timestamp': timestamp,
                                 'link': '',
@@ -114,7 +123,7 @@ def cybox_parse_observable(observable, timestamp):
 
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
-                            'description': observable.description.value,
+                            'description': description,
                             'title': observable.title,
                             'timestamp': timestamp,
                             'link': '',
@@ -126,7 +135,7 @@ def cybox_parse_observable(observable, timestamp):
             iocs['md5'].append(props.md5)
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
-                            'description': observable.description.value,
+                            'description': description,
                             'title': observable.title,
                             'timestamp': timestamp,
                             'link': '',
