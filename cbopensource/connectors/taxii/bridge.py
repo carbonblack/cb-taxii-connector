@@ -28,7 +28,10 @@ logger = logging.getLogger(__name__)
 
 
 def total_seconds(td):
-    return int(time.mktime(td.timetuple()))
+    try:
+        return int(time.mktime(td.timetuple()))
+    except:
+        return 0
 
 
 class CbTaxiiFeedConverter(object):
@@ -169,13 +172,15 @@ class CbTaxiiFeedConverter(object):
                                          collection_name=collection.name,
                                          begin_date=feed_helper.start_date,
                                          end_date=feed_helper.end_date,
-                                         #content_bindings=BINDING_CHOICES)
-                                         content_bindings=[CB_STIX_XML_12])
+                                         content_bindings=BINDING_CHOICES)
+                                         #content_bindings=[CB_STIX_XML_12])
 
             #
             # Iterate through all content_blocks
             #
             num_blocks = 0
+
+            logger.info("polling start_date: {}, end_date: {}".format(feed_helper.start_date,feed_helper.end_date))
             for block in content_blocks:
 
                 #
@@ -303,20 +308,27 @@ class CbTaxiiFeedConverter(object):
                                    discovery_path=site.get('discovery_path'))
 
             #
-            # Set verify_ssl inside the client
+            # Set verify_ssl and ca_cert inside the client
             #
-            client.set_auth(verify_ssl=site.get('ssl_verify'))
+            client.set_auth(verify_ssl=site.get('ssl_verify'), ca_cert=site.get('ca_cert'))
 
             if site.get('username'):
                 #
                 # If a username is supplied use basic authentication
                 #
-                client.set_auth(username=site.get('username'), password=site.get('password'), verify_ssl=site.get('ssl_verify'))
+                logger.info("Found Username in config, using basic auth...")
+                client.set_auth(username=site.get('username'),
+                                password=site.get('password'),
+                                verify_ssl=site.get('ssl_verify'),
+                                ca_cert=site.get('ca_cert'))
             elif site.get('cert_file'):
                 #
                 # if a cert file is specified use SSL authentication
                 #
-                client.set_auth(cert_file=site.get('cert_file'), key_file=site.get('key_file'), verify_ssl=site.get('ssl_verify'))
+                client.set_auth(cert_file=site.get('cert_file'),
+                                key_file=site.get('key_file'),
+                                verify_ssl=site.get('ssl_verify'),
+                                ca_cert=site.get('ca_cert'))
 
             if not site.get('collection_management_path', ''):
                 collections = client.get_collections()
