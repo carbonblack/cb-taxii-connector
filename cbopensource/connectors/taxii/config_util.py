@@ -104,6 +104,10 @@ def parse_config(config_file_path):
         if config.has_option(section, 'poll_path'):
             poll_path = config.get(section, 'poll_path')
 
+        ca_cert = None
+        if config.has_option(section, 'ca_cert'):
+            ca_cert = config.get(section, 'ca_cert')
+
         logger.info("Configured Site: %s Path: %s" % (site, output_path))
 
         sites.append({"site": site,
@@ -119,6 +123,7 @@ def parse_config(config_file_path):
                       "cert_file": cert_file,
                       "minutes_to_advance": minutes_to_advance,
                       "ssl_verify": ssl_verify,
+                      "ca_cert": ca_cert,
                       "discovery_path": discovery_path,
                       "collection_management_path": collection_management_path,
                       "poll_path": poll_path})
