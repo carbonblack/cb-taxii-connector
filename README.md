@@ -91,7 +91,7 @@ From here, one or more TAXII services can be configured. The example configurati
     use_https=false
     
     # by default, we validate SSL certificates. Turn this off by setting sslverify=false
-    sslverify=false
+    ssl_verify=false
     
     # if you need SSL certificates for authentication, set the path of the 
     # certificate and key here. Please leave blank to ignore.
