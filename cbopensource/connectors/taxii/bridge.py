@@ -173,7 +173,6 @@ class CbTaxiiFeedConverter(object):
                                          begin_date=feed_helper.start_date,
                                          end_date=feed_helper.end_date,
                                          content_bindings=BINDING_CHOICES)
-                                         #content_bindings=[CB_STIX_XML_12])
 
             #
             # Iterate through all content_blocks
