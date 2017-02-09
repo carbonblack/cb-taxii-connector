@@ -9,12 +9,12 @@
 #
 # Cb Response Server Url
 #
-server_url=https://www.askthedragon.net
+server_url=https://test.carbonblack.io
 
 #
 # You need to supply a CB global administrator API key here so that we can add our feed
 #
-auth_token=a2804ba04a108d22607099b183ab244de5e2d1e6
+auth_token=
 
 #
 # Put each site into its own configuration section.
@@ -32,17 +32,17 @@ site=test.taxiistand.com
 #
 # Discovery path.  This is required
 #
-discovery_path=/read-write-auth/services/discovery
+discovery_path=/read-only/services/discovery
 
 #
 # Collection Management path.  If not specified we will try to discover.
 #
-collection_management_path=/read-write-auth/services/collection-management
+collection_management_path=/read-only/services/collection-management
 
 #
 # Poll path.  If not specified we will try to discover.
 #
-poll_path=/read-write-auth/services/poll
+poll_path=/read-only/services/poll
 
 #
 # change to true if you require https versus http
@@ -51,6 +51,7 @@ use_https=True
 
 #
 # Verify SSL
+# Defaults to True
 #
 ssl_verify=False
 
@@ -75,12 +76,12 @@ icon_link=/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
 #
 # username for auth
 #
-username=guest
+username=
 
 #
 # password for auth
 #
-password=guest
+password=
 
 #
 # collections to retrieve (* for all, otherwise comma separated list case-insensitive)
@@ -95,9 +96,9 @@ feeds_enable=true
 
 #
 # (optional) the start date for which to start requesting data.
-# Defaults to 2016-12-01 00:00:00 if you supply nothing
+# Defaults to 2017-01-01 00:00:00 if you supply nothing
 #
-start_date=2016-12-01 00:00:00
+start_date=2017-01-01 00:00:00
 
 #
 # (optional) the minutes to advance for each request.  This
@@ -106,6 +107,11 @@ start_date=2016-12-01 00:00:00
 # number of hours, so 1440 to ask for data in daily chunks
 #
 minutes_to_advance=1440
+
+#
+# a path to CA SSL certificate file
+#
+#ca_cert=
 
 
 ## If you want to use hailataxii

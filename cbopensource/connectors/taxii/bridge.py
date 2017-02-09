@@ -133,7 +133,7 @@ class CbTaxiiFeedConverter(object):
         #
         start_date_str = site.get('start_date')
         if not start_date_str or len(start_date_str) == 0:
-            start_date_str = "2016-12-01 00:00:00"
+            start_date_str = "2017-01-01 00:00:00"
 
 
         #
