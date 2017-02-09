@@ -168,98 +168,119 @@ class CbTaxiiFeedConverter(object):
         reports = []
         while True:
 
-            content_blocks = client.poll(uri=uri,
-                                         collection_name=collection.name,
-                                         begin_date=feed_helper.start_date,
-                                         end_date=feed_helper.end_date,
-                                         content_bindings=BINDING_CHOICES)
+            try:
+                try:
+                    content_blocks = client.poll(uri=uri,
+                                                 collection_name=collection.name,
+                                                 begin_date=feed_helper.start_date,
+                                                 end_date=feed_helper.end_date,
+                                                 content_bindings=BINDING_CHOICES)
 
-            #
-            # Iterate through all content_blocks
-            #
-            num_blocks = 0
+                except Exception as e:
+                    traceback.print_exc()
+                    content_blocks = []
 
-            logger.info("polling start_date: {}, end_date: {}".format(feed_helper.start_date,feed_helper.end_date))
-            for block in content_blocks:
-
-                #
-                # if in export mode then save off this content block
-                #
-                if self.export_dir:
-                    self.export_xml(collection_name,
-                                    feed_helper.start_date,
-                                    feed_helper.end_date,
-                                    num_blocks,
-                                    block.content)
 
                 #
-                # This code accounts for a case found with ThreatCentral.io where the content is url encoded.
-                # etree.fromstring can parse this data.
+                # Iterate through all content_blocks
                 #
-                root = etree.fromstring(block.content)
-                content = root.find('.//{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content')
-                if content is not None and len(content) == 0 and len(list(content)) == 0:
+                num_blocks = 0
+
+                logger.info("polling start_date: {}, end_date: {}".format(feed_helper.start_date,feed_helper.end_date))
+                for block in content_blocks:
+
                     #
-                    # Content has no children.  So lets make sure we parse the xml text for content and re-add
-                    # it as valid XML so we can parse
+                    # if in export mode then save off this content block
                     #
-                    new_stix_package = etree.fromstring(root.find(
-                        "{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content_Block/{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content").text)
-                    content.append(new_stix_package)
+                    if self.export_dir:
+                        self.export_xml(collection_name,
+                                        feed_helper.start_date,
+                                        feed_helper.end_date,
+                                        num_blocks,
+                                        block.content)
 
-                #
-                # Since we modified the xml, we need create a new xml message string to parse
-                #
-                message = etree.tostring(root)
+                    #
+                    # This code accounts for a case found with ThreatCentral.io where the content is url encoded.
+                    # etree.fromstring can parse this data.
+                    #
+                    try:
+                        root = etree.fromstring(block.content)
+                        content = root.find('.//{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content')
+                        if content is not None and len(content) == 0 and len(list(content)) == 0:
+                            #
+                            # Content has no children.  So lets make sure we parse the xml text for content and re-add
+                            # it as valid XML so we can parse
+                            #
+                            new_stix_package = etree.fromstring(root.find(
+                                "{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content_Block/{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content").text)
+                            content.append(new_stix_package)
 
-                #
-                # Write the content block to disk so we can parse with python stix
-                #
-                file_handle, file_path = self.write_to_temp_file(message)
 
-                #
-                # Parse STIX data
-                #
-                stix_package = STIXPackage.from_xml(file_path)
 
-                #
-                # Get the timestamp of the STIX Package so we can use this in our feed
-                #
-                timestamp = total_seconds(stix_package.timestamp)
-
-                #
-                # Now lets find some data.  Iterate through all observables and parse
-                #
-                if stix_package.observables:
-                    for observable in stix_package.observables:
                         #
-                        # Cybox observable returns a list
+                        # Since we modified the xml, we need create a new xml message string to parse
                         #
-                        reports.extend(cybox_parse_observable(observable, timestamp))
+                        message = etree.tostring(root)
+
+                        #
+                        # Write the content block to disk so we can parse with python stix
+                        #
+                        file_handle, file_path = self.write_to_temp_file(message)
+
+                        #
+                        # Parse STIX data
+                        #
+                        stix_package = STIXPackage.from_xml(file_path)
+
+                        #
+                        # Get the timestamp of the STIX Package so we can use this in our feed
+                        #
+                        timestamp = total_seconds(stix_package.timestamp)
+
+                        #
+                        # Now lets find some data.  Iterate through all observables and parse
+                        #
+                        if stix_package.observables:
+                            for observable in stix_package.observables:
+                                #
+                                # Cybox observable returns a list
+                                #
+                                reports.extend(cybox_parse_observable(observable, timestamp))
+
+                        #
+                        # Delete our temporary file
+                        #
+                        file_handle.close()
+
+
+
+                        num_blocks += 1
+
+                        #
+                        # end for loop through content blocks
+                        #
+
+                    except Exception as e:
+                        print block.content
+                        traceback.print_exc()
+                        continue
+
+                logger.info("content blocks read: {}".format(num_blocks))
+                logger.info("current number of reports: {}".format(len(reports)))
 
                 #
-                # Delete our temporary file
+                # DEBUG CODE
                 #
-                file_handle.close()
-
-                num_blocks += 1
+                #if len(reports) > 10:
+                #    break
 
                 #
-                # end for loop through content blocks
+                # Attempt to advance the start time and end time
                 #
 
-            logger.info("content blocks read: {}".format(num_blocks))
-            logger.info("current number of reports: {}".format(len(reports)))
+            except Exception as e:
+                traceback.print_exc()
 
-            #
-            # DEBUG CODE
-            #
-            #if len(reports) > 10:
-            #    break
-
-            #
-            # Attempt to advance the start time and end time
-            #
             if feed_helper.advance():
                 continue
             else:
@@ -267,6 +288,7 @@ class CbTaxiiFeedConverter(object):
             #
             # end While True
             #
+
 
         logger.info("Found {} new reports.".format(len(reports)))
 
