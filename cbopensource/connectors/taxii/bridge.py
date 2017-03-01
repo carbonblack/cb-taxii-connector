@@ -261,7 +261,7 @@ class CbTaxiiFeedConverter(object):
                         #
 
                     except Exception as e:
-                        print block.content
+                        #print block.content
                         traceback.print_exc()
                         continue
 
@@ -333,7 +333,7 @@ class CbTaxiiFeedConverter(object):
             #
             client.set_auth(verify_ssl=site.get('ssl_verify'), ca_cert=site.get('ca_cert'))
 
-            if site.get('username'):
+            if site.get('username') or site.get('cert_file'):
                 #
                 # If a username is supplied use basic authentication
                 #
@@ -341,15 +341,10 @@ class CbTaxiiFeedConverter(object):
                 client.set_auth(username=site.get('username'),
                                 password=site.get('password'),
                                 verify_ssl=site.get('ssl_verify'),
-                                ca_cert=site.get('ca_cert'))
-            elif site.get('cert_file'):
-                #
-                # if a cert file is specified use SSL authentication
-                #
-                client.set_auth(cert_file=site.get('cert_file'),
-                                key_file=site.get('key_file'),
-                                verify_ssl=site.get('ssl_verify'),
-                                ca_cert=site.get('ca_cert'))
+                                ca_cert=site.get('ca_cert'),
+                                cert_file=site.get('cert_file'),
+                                key_file=site.get('key_file'))
+
 
             if not site.get('collection_management_path', ''):
                 collections = client.get_collections()
