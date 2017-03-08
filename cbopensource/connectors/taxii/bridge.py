@@ -261,8 +261,7 @@ class CbTaxiiFeedConverter(object):
                         #
 
                     except Exception as e:
-                        #print block.content
-                        traceback.print_exc()
+                        logger.info(e.message)
                         continue
 
                 logger.info("content blocks read: {}".format(num_blocks))
@@ -279,7 +278,7 @@ class CbTaxiiFeedConverter(object):
                 #
 
             except Exception as e:
-                traceback.print_exc()
+                logger.info(traceback.format_exc())
 
             if feed_helper.advance():
                 continue

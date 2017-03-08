@@ -5,6 +5,7 @@ from cybox.objects.file_object import File
 import logging
 import string
 import socket
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,6 @@ def validate_ip_address(ip_address):
     except socket.error:
         return False
 
-
 def cybox_parse_observable(observable, timestamp):
     """
     parses a cybox observable and returns a list of iocs.
@@ -95,10 +95,20 @@ def cybox_parse_observable(observable, timestamp):
     # sometimes the description is None
     #
 
-    if observable.description:
+    if observable.description and observable.description.value:
         description = observable.description.value
     else:
         description = ''
+
+    #
+    # Sometimes the title is None, so generate a random UUID
+    #
+
+    if observable.title:
+        title = observable.title
+    else:
+        title = str(uuid.uuid4())
+
 
     if type(props) == DomainName:
         if props.value and props.value.condition and props.value.condition.lower().strip() == 'equals':
@@ -110,7 +120,7 @@ def cybox_parse_observable(observable, timestamp):
                 reports.append({'iocs': iocs,
                                 'id': sanitize_id(observable.id_),
                                 'description': description,
-                                'title': observable.title,
+                                'title': title,
                                 'timestamp': timestamp,
                                 'link': '',
                                 'score': 50})
@@ -124,7 +134,7 @@ def cybox_parse_observable(observable, timestamp):
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
                             'description': description,
-                            'title': observable.title,
+                            'title': title,
                             'timestamp': timestamp,
                             'link': '',
                             'score': 50})
@@ -133,10 +143,11 @@ def cybox_parse_observable(observable, timestamp):
         if props.md5 and validate_md5sum(props.md5):
             iocs = {'md5': []}
             iocs['md5'].append(props.md5)
+
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
                             'description': description,
-                            'title': observable.title,
+                            'title': title,
                             'timestamp': timestamp,
                             'link': '',
                             'score': 50})
