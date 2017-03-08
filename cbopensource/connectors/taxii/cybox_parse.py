@@ -127,7 +127,7 @@ def cybox_parse_observable(observable, timestamp):
 
     elif type(props) == Address:
         if props.category == 'ipv4-addr' and props.address_value and validate_ip_address(props.address_value.value):
-            ip_address = props.address_value.value
+            ip_address = props.address_value.value.strip()
             iocs = {'ipv4': []}
             iocs['ipv4'].append(ip_address)
 
@@ -140,9 +140,9 @@ def cybox_parse_observable(observable, timestamp):
                             'score': 50})
 
     elif type(props) == File:
-        if props.md5 and validate_md5sum(props.md5):
+        if props.md5 and validate_md5sum(props.md5.strip()):
             iocs = {'md5': []}
-            iocs['md5'].append(props.md5)
+            iocs['md5'].append(props.md5.strip())
 
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
