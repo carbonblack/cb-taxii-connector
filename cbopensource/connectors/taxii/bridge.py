@@ -237,6 +237,10 @@ class CbTaxiiFeedConverter(object):
                         #
                         timestamp = total_seconds(stix_package.timestamp)
 
+                        if stix_package.indicators:
+                            for indicator in stix_package.indicators:
+                                reports.extend(cybox_parse_observable(indicator.observable, timestamp))
+
                         #
                         # Now lets find some data.  Iterate through all observables and parse
                         #
