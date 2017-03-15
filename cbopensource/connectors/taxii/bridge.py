@@ -13,6 +13,9 @@ from cybox_parse import cybox_parse_observable
 from stix.core import STIXPackage
 from config_util import parse_config
 import logging
+import datetime
+import dateutil
+import dateutil.tz
 
 from cabby.constants import (
     CB_STIX_XML_111, CB_CAP_11, CB_SMIME,
@@ -110,7 +113,7 @@ class CbTaxiiFeedConverter(object):
             file_handle.write(message)
 
 
-    def _import_collection(self, client, site, collection):
+    def _import_collection(self, client, site, collection, data_set=False):
 
         collection_name = collection.name
         sanitized_feed_name = cleanup_string("%s%s" % (site.get('site'), collection_name))
@@ -125,7 +128,7 @@ class CbTaxiiFeedConverter(object):
         #
         # We only care about DATA_FEED type
         #
-        if not available or collection_type != "DATA_FEED":
+        if not available:# or collection_type != "DATA_FEED":
             return False
 
         #
@@ -232,6 +235,7 @@ class CbTaxiiFeedConverter(object):
                         #
                         stix_package = STIXPackage.from_xml(file_path)
 
+
                         #
                         # Get the timestamp of the STIX Package so we can use this in our feed
                         #
@@ -239,6 +243,9 @@ class CbTaxiiFeedConverter(object):
 
                         if stix_package.indicators:
                             for indicator in stix_package.indicators:
+                                timestamp = (indicator.timestamp -
+                                             datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds()
+
                                 reports.extend(cybox_parse_observable(indicator.observable, timestamp))
 
                         #
@@ -256,8 +263,6 @@ class CbTaxiiFeedConverter(object):
                         #
                         file_handle.close()
 
-
-
                         num_blocks += 1
 
                         #
@@ -270,6 +275,12 @@ class CbTaxiiFeedConverter(object):
 
                 logger.info("content blocks read: {}".format(num_blocks))
                 logger.info("current number of reports: {}".format(len(reports)))
+
+                #
+                # If it is just a data_set, the data is unordered, so we can just break out of the while loop
+                #
+                if data_set:
+                    break
 
                 #
                 # DEBUG CODE
@@ -311,12 +322,12 @@ class CbTaxiiFeedConverter(object):
         #
         # Create Cb Response Feed if necessary
         #
-        feed_id = self.cb.feed_get_id_by_name(sanitized_feed_name)
-        if not feed_id:
-            data = self.cb.feed_add_from_url("file://" + feed_helper.path,
-                                             site.get('feeds_enable'),
-                                             False,
-                                             False)
+        #feed_id = self.cb.feed_get_id_by_name(sanitized_feed_name)
+        #if not feed_id:
+        #    data = self.cb.feed_add_from_url("file://" + feed_helper.path,
+        #                                     site.get('feeds_enable'),
+        #                                     False,
+        #                                     False)
 
 
     def perform(self):
@@ -378,11 +389,16 @@ class CbTaxiiFeedConverter(object):
                 want_all = True
 
             for collection in collections:
-                if collection.type != 'DATA_FEED':
+                if collection.type != 'DATA_FEED' and collection.type != 'DATA_SET':
                     continue
 
+                if collection.type == 'DATA_SET':
+                    data_set = True
+                else:
+                    data_set = False
+
                 if want_all or collection.name.lower() in desired_collections:
-                    self._import_collection(client, site, collection)
+                    self._import_collection(client, site, collection, data_set)
 
 
 @contextmanager
