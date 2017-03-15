@@ -125,10 +125,7 @@ class CbTaxiiFeedConverter(object):
                                          available,
                                          collection_type))
 
-        #
-        # We only care about DATA_FEED type
-        #
-        if not available:# or collection_type != "DATA_FEED":
+        if not available:
             return False
 
         #
@@ -148,7 +145,8 @@ class CbTaxiiFeedConverter(object):
             site.get('minutes_to_advance'),
             start_date_str)
 
-        logger.info("Feed start time %s" % feed_helper.start_date)
+        if not data_set:
+            logger.info("Feed start time %s" % feed_helper.start_date)
         logger.info("polling Collection: {}...".format(collection.name))
 
         #
@@ -189,7 +187,8 @@ class CbTaxiiFeedConverter(object):
                 #
                 num_blocks = 0
 
-                logger.info("polling start_date: {}, end_date: {}".format(feed_helper.start_date,feed_helper.end_date))
+                if not data_set:
+                    logger.info("polling start_date: {}, end_date: {}".format(feed_helper.start_date,feed_helper.end_date))
                 for block in content_blocks:
 
                     #
@@ -322,12 +321,12 @@ class CbTaxiiFeedConverter(object):
         #
         # Create Cb Response Feed if necessary
         #
-        #feed_id = self.cb.feed_get_id_by_name(sanitized_feed_name)
-        #if not feed_id:
-        #    data = self.cb.feed_add_from_url("file://" + feed_helper.path,
-        #                                     site.get('feeds_enable'),
-        #                                     False,
-        #                                     False)
+        feed_id = self.cb.feed_get_id_by_name(sanitized_feed_name)
+        if not feed_id:
+            data = self.cb.feed_add_from_url("file://" + feed_helper.path,
+                                             site.get('feeds_enable'),
+                                             False,
+                                             False)
 
 
     def perform(self):
