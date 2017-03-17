@@ -17,6 +17,12 @@ server_url=https://test.carbonblack.io
 auth_token=
 
 #
+# Proxy configuration
+#
+#http_proxy_url=
+#https_proxy_url=
+
+#
 # Put each site into its own configuration section.
 # You might just have a single site, like soltra edge or a remote taxii server
 #

@@ -24,6 +24,14 @@ def parse_config(config_file_path):
     if config.has_option("cbconfig", "auth_token"):
         api_token = config.get("cbconfig", "auth_token")
 
+    http_proxy_url = None
+    if config.has_option("cbconfig", 'http_proxy_url'):
+        http_proxy_url = config.get("cbconfig", 'http_proxy_url')
+
+    https_proxy_url = None
+    if config.has_option("cbconfig", 'https_proxy_url'):
+        https_proxy_url = config.get("cbconfig", 'https_proxy_url')
+
     sites = []
 
     for section in config.sections():
@@ -128,4 +136,8 @@ def parse_config(config_file_path):
                       "collection_management_path": collection_management_path,
                       "poll_path": poll_path})
 
-        return {'server_url': server_url, 'api_token': api_token, 'sites': sites}
+        return {'server_url': server_url,
+                'api_token': api_token,
+                'sites': sites,
+                'http_proxy_url': http_proxy_url,
+                'https_proxy_url': https_proxy_url}

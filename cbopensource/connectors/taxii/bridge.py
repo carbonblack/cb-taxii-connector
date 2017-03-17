@@ -52,6 +52,9 @@ class CbTaxiiFeedConverter(object):
         self.export_dir = export_dir
         self.import_dir = import_dir
 
+        self.http_proxy_url = config_dict.get('http_proxy_url', None)
+        self.https_proxy_url = config_dict.get('https_proxy_url', None)
+
         if self.export_dir and not os.path.exists(self.export_dir):
             os.mkdir(self.export_dir)
 
@@ -178,7 +181,7 @@ class CbTaxiiFeedConverter(object):
                                                  content_bindings=BINDING_CHOICES)
 
                 except Exception as e:
-                    traceback.print_exc()
+                    logger.info(e.message)
                     content_blocks = []
 
 
@@ -242,8 +245,8 @@ class CbTaxiiFeedConverter(object):
 
                         if stix_package.indicators:
                             for indicator in stix_package.indicators:
-                                timestamp = (indicator.timestamp -
-                                             datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds()
+                                timestamp = int((indicator.timestamp -
+                                             datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds())
 
                                 reports.extend(cybox_parse_observable(indicator.observable, timestamp))
 
@@ -275,11 +278,6 @@ class CbTaxiiFeedConverter(object):
                 logger.info("content blocks read: {}".format(num_blocks))
                 logger.info("current number of reports: {}".format(len(reports)))
 
-                #
-                # If it is just a data_set, the data is unordered, so we can just break out of the while loop
-                #
-                if data_set:
-                    break
 
                 #
                 # DEBUG CODE
@@ -293,6 +291,12 @@ class CbTaxiiFeedConverter(object):
 
             except Exception as e:
                 logger.info(traceback.format_exc())
+
+            #
+            # If it is just a data_set, the data is unordered, so we can just break out of the while loop
+            #
+            if data_set:
+                break
 
             if feed_helper.advance():
                 continue
@@ -315,18 +319,21 @@ class CbTaxiiFeedConverter(object):
                                site.get('icon_link'),
                                reports)
 
+
         if feed_helper.write_feed(data):
             feed_helper.save_details()
 
         #
         # Create Cb Response Feed if necessary
         #
+
         feed_id = self.cb.feed_get_id_by_name(sanitized_feed_name)
         if not feed_id:
-            data = self.cb.feed_add_from_url("file://" + feed_helper.path,
-                                             site.get('feeds_enable'),
-                                             False,
-                                             False)
+            self.cb.feed_add_from_url("file://" + feed_helper.path,
+                                      site.get('feeds_enable'),
+                                      False,
+                                      False)
+
 
 
     def perform(self):
@@ -345,6 +352,22 @@ class CbTaxiiFeedConverter(object):
             # Set verify_ssl and ca_cert inside the client
             #
             client.set_auth(verify_ssl=site.get('ssl_verify'), ca_cert=site.get('ca_cert'))
+
+            #
+            # Proxy Settings
+            #
+            proxy_dict = dict()
+
+            if self.http_proxy_url:
+                logger.info("Found HTTP Proxy: {}".format(self.http_proxy_url))
+                proxy_dict['http'] = self.http_proxy_url
+
+            if self.https_proxy_url:
+                logger.info("Found HTTPS Proxy: {}".format(self.https_proxy_url))
+                proxy_dict['https'] = self.https_proxy_url
+
+            if proxy_dict:
+                client.set_proxies(proxy_dict)
 
             if site.get('username') or site.get('cert_file'):
                 #
@@ -381,7 +404,7 @@ class CbTaxiiFeedConverter(object):
                 logger.info('Unable to find any collections.  Exiting...')
                 sys.exit(0)
 
-            desired_collections = site.get('collections').lower().split(',')
+            desired_collections = [x.strip() for x in site.get('collections').lower().split(',')]
 
             want_all = False
             if '*' in desired_collections:
