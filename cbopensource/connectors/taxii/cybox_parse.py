@@ -78,7 +78,7 @@ def validate_ip_address(ip_address):
     except socket.error:
         return False
 
-def cybox_parse_observable(observable, timestamp):
+def cybox_parse_observable(observable, indicator, timestamp):
     """
     parses a cybox observable and returns a list of iocs.
     :param observable: the cybox obserable to parse
@@ -99,6 +99,26 @@ def cybox_parse_observable(observable, timestamp):
         description = observable.description.value
     else:
         description = ''
+
+    #
+    # if description is an empty string, then use the indicator's description
+    # NOTE: This was added for RecordedFuture
+    #
+
+    if not description and indicator and indicator.description:
+        description = indicator.description.value
+
+
+    #
+    # use the first reference as a link
+    # NOTE: This was added for RecordedFuture
+    #
+    if indicator and indicator.producer and indicator.producer.references:
+        for reference in indicator.producer.references:
+            link = reference
+            break
+    else:
+        link = ''
 
     #
     # Sometimes the title is None, so generate a random UUID
@@ -122,7 +142,7 @@ def cybox_parse_observable(observable, timestamp):
                                 'description': description,
                                 'title': title,
                                 'timestamp': timestamp,
-                                'link': '',
+                                'link': link,
                                 'score': 50})
 
     elif type(props) == Address:
@@ -136,7 +156,7 @@ def cybox_parse_observable(observable, timestamp):
                             'description': description,
                             'title': title,
                             'timestamp': timestamp,
-                            'link': '',
+                            'link': link,
                             'score': 50})
 
     elif type(props) == File:
@@ -149,7 +169,7 @@ def cybox_parse_observable(observable, timestamp):
                             'description': description,
                             'title': title,
                             'timestamp': timestamp,
-                            'link': '',
+                            'link': link,
                             'score': 50})
 
     # else:

@@ -96,14 +96,14 @@ def remove_duplicate_reports(reports):
     return out_reports
 
 
-def build_feed_data(feed_name, feed_description, site, icon_link, reports):
+def build_feed_data(feed_name, display_name, feed_summary, site, icon_link, reports):
     """
     :return:feed as bytes to be written out
     """
     feedinfo = {'name': feed_name,
-                'display_name': feed_description,
+                'display_name': display_name,
                 'provider_url': 'http://' + site,
-                'summary': "TAXII Feed %s" % feed_description,
+                'summary': feed_summary,
                 'tech_data': "There are no requirements to share any data to receive this feed.",
                 'icon': icon_link
                 }

@@ -120,6 +120,7 @@ class CbTaxiiFeedConverter(object):
 
         collection_name = collection.name
         sanitized_feed_name = cleanup_string("%s%s" % (site.get('site'), collection_name))
+        feed_summary = "%s %s" % (site.get('site'), collection_name)
         available = collection.available
         collection_type = collection.type
         logger.info("%s,%s,%s,%s,%s" % (site.get('site'),
@@ -239,6 +240,17 @@ class CbTaxiiFeedConverter(object):
 
 
                         #
+                        # if it is a DATA_SET make feed_summary from the stix_header description
+                        # NOTE: this is for RecordedFuture, also note that we only do this for data_sets.
+                        #       to date I have only seen RecordedFuture use data_sets
+                        #
+                        if data_set and stix_package.stix_header and stix_package.stix_header.descriptions:
+                            for desc in stix_package.stix_header.descriptions:
+                                feed_summary = desc.value
+                                break
+
+
+                        #
                         # Get the timestamp of the STIX Package so we can use this in our feed
                         #
                         timestamp = total_seconds(stix_package.timestamp)
@@ -248,7 +260,7 @@ class CbTaxiiFeedConverter(object):
                                 timestamp = int((indicator.timestamp -
                                              datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds())
 
-                                reports.extend(cybox_parse_observable(indicator.observable, timestamp))
+                                reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp))
 
                         #
                         # Now lets find some data.  Iterate through all observables and parse
@@ -258,7 +270,7 @@ class CbTaxiiFeedConverter(object):
                                 #
                                 # Cybox observable returns a list
                                 #
-                                reports.extend(cybox_parse_observable(observable, timestamp))
+                                reports.extend(cybox_parse_observable(observable, None, timestamp))
 
                         #
                         # Delete our temporary file
@@ -307,6 +319,7 @@ class CbTaxiiFeedConverter(object):
             #
 
 
+
         logger.info("Found {} new reports.".format(len(reports)))
 
         reports = feed_helper.load_existing_feed_data() + reports
@@ -315,6 +328,7 @@ class CbTaxiiFeedConverter(object):
 
         data = build_feed_data(sanitized_feed_name,
                                "%s %s" % (site.get('site'), collection_name),
+                               feed_summary,
                                site.get('site'),
                                site.get('icon_link'),
                                reports)
@@ -333,7 +347,6 @@ class CbTaxiiFeedConverter(object):
                                       site.get('feeds_enable'),
                                       False,
                                       False)
-
 
 
     def perform(self):
