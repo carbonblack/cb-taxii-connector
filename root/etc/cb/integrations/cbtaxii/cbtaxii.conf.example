@@ -69,6 +69,11 @@ cert_file=
 key_file=
 
 #
+# Set the default risk score of items from this TAXII feed
+#
+default_score=50
+
+#
 # the output path for the feeds, probably leave this alone
 #
 output_path=/usr/share/cb/integrations/cbtaxii/feeds/

@@ -64,6 +64,7 @@ def parse_config(config_file_path):
         password = config.get(section, "password")
         feeds_enable = config.getboolean(section, "feeds_enable")
         collections = config.get(section, "collections") if config.has_option(section, "collections") else "*"
+        default_score = config.getint(section, "default_score") if config.has_option(section, "default_score") else 50
 
         if config.has_option(section, "start_date"):
             start_date = config.get(section, "start_date")
@@ -134,7 +135,8 @@ def parse_config(config_file_path):
                       "ca_cert": ca_cert,
                       "discovery_path": discovery_path,
                       "collection_management_path": collection_management_path,
-                      "poll_path": poll_path})
+                      "poll_path": poll_path,
+                      "default_score": default_score})
 
         return {'server_url': server_url,
                 'api_token': api_token,

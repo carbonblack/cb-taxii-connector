@@ -123,6 +123,7 @@ class CbTaxiiFeedConverter(object):
         feed_summary = "%s %s" % (site.get('site'), collection_name)
         available = collection.available
         collection_type = collection.type
+        default_score = site.get('default_score')
         logger.info("%s,%s,%s,%s,%s" % (site.get('site'),
                                          collection_name,
                                          sanitized_feed_name,
@@ -257,20 +258,28 @@ class CbTaxiiFeedConverter(object):
 
                         if stix_package.indicators:
                             for indicator in stix_package.indicators:
-                                timestamp = int((indicator.timestamp -
-                                             datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds())
+                                if not indicator or not indicator.observable:
+                                    continue
 
-                                reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp))
+                                if not indicator.timestamp:
+                                    timestamp = 0
+                                else:
+                                    timestamp = int((indicator.timestamp -
+                                                 datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds())
+
+                                reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp, default_score))
 
                         #
                         # Now lets find some data.  Iterate through all observables and parse
                         #
                         if stix_package.observables:
                             for observable in stix_package.observables:
+                                if not observable:
+                                    continue
                                 #
                                 # Cybox observable returns a list
                                 #
-                                reports.extend(cybox_parse_observable(observable, None, timestamp))
+                                reports.extend(cybox_parse_observable(observable, None, timestamp, default_score))
 
                         #
                         # Delete our temporary file
@@ -284,6 +293,7 @@ class CbTaxiiFeedConverter(object):
                         #
 
                     except Exception as e:
+                        #logger.info(traceback.format_exc())
                         logger.info(e.message)
                         continue
 

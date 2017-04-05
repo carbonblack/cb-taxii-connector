@@ -78,7 +78,7 @@ def validate_ip_address(ip_address):
     except socket.error:
         return False
 
-def cybox_parse_observable(observable, indicator, timestamp):
+def cybox_parse_observable(observable, indicator, timestamp, score):
     """
     parses a cybox observable and returns a list of iocs.
     :param observable: the cybox obserable to parse
@@ -94,11 +94,9 @@ def cybox_parse_observable(observable, indicator, timestamp):
     #
     # sometimes the description is None
     #
-
+    description = ''
     if observable.description and observable.description.value:
         description = observable.description.value
-    else:
-        description = ''
 
     #
     # if description is an empty string, then use the indicator's description
@@ -113,12 +111,12 @@ def cybox_parse_observable(observable, indicator, timestamp):
     # use the first reference as a link
     # NOTE: This was added for RecordedFuture
     #
+    link = ''
     if indicator and indicator.producer and indicator.producer.references:
         for reference in indicator.producer.references:
             link = reference
             break
-    else:
-        link = ''
+
 
     #
     # Sometimes the title is None, so generate a random UUID
@@ -132,24 +130,43 @@ def cybox_parse_observable(observable, indicator, timestamp):
 
     if type(props) == DomainName:
         if props.value and props.value.condition and props.value.condition.lower().strip() == 'equals':
-            domain_name = props.value.value.strip()
             iocs = {'dns': []}
-            iocs['dns'].append(domain_name)
-
-            if validate_domain_name(domain_name):
-                reports.append({'iocs': iocs,
-                                'id': sanitize_id(observable.id_),
-                                'description': description,
-                                'title': title,
-                                'timestamp': timestamp,
-                                'link': link,
-                                'score': 50})
+            #
+            # Sometimes props.value.value is a list
+            #
+            if type(props.value.value) is list:
+                for domain_name in props.value.value:
+                    if not validate_domain_name(domain_name.strip()):
+                        continue
+                    else:
+                        iocs['dns'].append(domain_name.strip())
+            else:
+                domain_name = props.value.value.strip()
+                if validate_domain_name(domain_name):
+                    iocs['dns'].append(domain_name)
+                    reports.append({'iocs': iocs,
+                                    'id': sanitize_id(observable.id_),
+                                    'description': description,
+                                    'title': title,
+                                    'timestamp': timestamp,
+                                    'link': link,
+                                    'score': 50})
 
     elif type(props) == Address:
-        if props.category == 'ipv4-addr' and props.address_value and validate_ip_address(props.address_value.value):
-            ip_address = props.address_value.value.strip()
+        if props.category == 'ipv4-addr' and props.address_value:
             iocs = {'ipv4': []}
-            iocs['ipv4'].append(ip_address)
+
+            #
+            # Sometimes props.address_value.value is a list vs a string
+            #
+            if type(props.address_value.value) is list:
+                for ip in props.address_value.value:
+                    if not validate_ip_address(ip.strip()):
+                        continue
+                    else:
+                        iocs['ipv4'].append(ip.strip())
+            else:
+                iocs['ipv4'].append(props.address_value.value.strip())
 
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
@@ -157,12 +174,18 @@ def cybox_parse_observable(observable, indicator, timestamp):
                             'title': title,
                             'timestamp': timestamp,
                             'link': link,
-                            'score': 50})
+                            'score': score})
 
     elif type(props) == File:
-        if props.md5 and validate_md5sum(props.md5.strip()):
-            iocs = {'md5': []}
-            iocs['md5'].append(props.md5.strip())
+        iocs = {'md5': []}
+        if props.md5:
+            if type(props.md5) is list:
+                for md5 in props.md5:
+                    if not validate_md5sum(md5.strip()):
+                        continue
+                    iocs['md5'].append(md5.strip())
+            else:
+                iocs['md5'].append(props.md5.strip())
 
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
@@ -170,7 +193,7 @@ def cybox_parse_observable(observable, indicator, timestamp):
                             'title': title,
                             'timestamp': timestamp,
                             'link': link,
-                            'score': 50})
+                            'score': score})
 
     # else:
     #    print type(props), "Not supported"
