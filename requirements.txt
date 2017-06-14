@@ -1,7 +1,6 @@
--e git://github.com/carbonblack/cbfeeds.git#egg=cbfeeds
-stix == 1.2.0.2
-requests >= 2.7.0
+cbfeeds==0.8.0
+stix==1.2.0.2
+cbapi==1.1.1 
+cabby==0.1.17
+pyinstaller==3.1.1
 simplejson
-cbapi == 0.8.0
-cabby == 0.1.16
-pyinstaller == 3.1.1
