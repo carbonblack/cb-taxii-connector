@@ -142,13 +142,16 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
                 domain_name = props.value.value.strip()
                 if validate_domain_name(domain_name):
                     iocs['dns'].append(domain_name)
-                    reports.append({'iocs': iocs,
-                                    'id': sanitize_id(observable.id_),
-                                    'description': description,
-                                    'title': title,
-                                    'timestamp': timestamp,
-                                    'link': link,
-                                    'score': 50})
+
+
+            if len(iocs['dns']) > 0:
+                reports.append({'iocs': iocs,
+                                'id': sanitize_id(observable.id_),
+                                'description': description,
+                                'title': title,
+                                'timestamp': timestamp,
+                                'link': link,
+                                'score': score})
 
     elif type(props) == Address:
         if props.category == 'ipv4-addr' and props.address_value:
@@ -166,13 +169,14 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
                 if validate_ip_address(ipv4):
                     iocs['ipv4'].append(ipv4)
 
-            reports.append({'iocs': iocs,
-                            'id': sanitize_id(observable.id_),
-                            'description': description,
-                            'title': title,
-                            'timestamp': timestamp,
-                            'link': link,
-                            'score': score})
+            if len(iocs['ipv4']) > 0:
+                reports.append({'iocs': iocs,
+                                'id': sanitize_id(observable.id_),
+                                'description': description,
+                                'title': title,
+                                'timestamp': timestamp,
+                                'link': link,
+                                'score': score})
 
     elif type(props) == File:
         iocs = {'md5': []}
@@ -186,12 +190,13 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
                 if validate_md5sum(md5):
                     iocs['md5'].append(md5)
 
-            reports.append({'iocs': iocs,
-                            'id': sanitize_id(observable.id_),
-                            'description': description,
-                            'title': title,
-                            'timestamp': timestamp,
-                            'link': link,
-                            'score': score})
+            if len(iocs['md5']) > 0:
+                reports.append({'iocs': iocs,
+                                'id': sanitize_id(observable.id_),
+                                'description': description,
+                                'title': title,
+                                'timestamp': timestamp,
+                                'link': link,
+                                'score': score})
 
     return reports
