@@ -7,7 +7,11 @@ import tempfile
 from lxml import etree
 from contextlib import contextmanager
 from cb_feed_util import FeedHelper, build_feed_data
-from cbapi import CbApi
+
+from cbapi.response import CbResponseAPI, Feed
+from cbapi.example_helpers import get_object_by_name_or_id
+from cbapi.errors import ServerError
+
 from cabby import create_client
 from cybox_parse import cybox_parse_observable
 from stix.core import STIXPackage
@@ -62,8 +66,8 @@ class CbTaxiiFeedConverter(object):
         # Test Cb Response connectivity
         #
         try:
-            self.cb = CbApi(server=self.server_url, token=self.api_token, ssl_verify=False)
-            self.cb.feed_enum()
+            self.cb = CbResponseAPI()
+            self.cb.info()
         except:
             logger.error(traceback.format_exc())
             sys.exit(-1)
@@ -328,8 +332,6 @@ class CbTaxiiFeedConverter(object):
             # end While True
             #
 
-
-
         logger.info("Found {} new reports.".format(len(reports)))
 
         reports = feed_helper.load_existing_feed_data() + reports
@@ -351,12 +353,50 @@ class CbTaxiiFeedConverter(object):
         # Create Cb Response Feed if necessary
         #
 
-        feed_id = self.cb.feed_get_id_by_name(sanitized_feed_name)
+        feed_id = None
+
+        try:
+            feeds = get_object_by_name_or_id(self.cb, Feed, name=sanitized_feed_name)
+
+            if not feeds:
+                logger.info("Feed {} was not found, so we are going to create it".format(sanitized_feed_name))
+
+            elif len(feeds) > 1:
+                logger.warning("Multiple feeds found, selecting Feed id {}".format(feeds[0].id))
+
+            elif feeds:
+                feed_id = feeds[0].id
+                logger.info("Feed {} was found as Feed ID {}".format(sanitized_feed_name, feed_id))
+
+        except Exception as e:
+            logger.info(e.message)
+
         if not feed_id:
-            self.cb.feed_add_from_url("file://" + feed_helper.path,
-                                      site.get('feeds_enable'),
-                                      False,
-                                      False)
+            logger.info("Creating %s feed for the first time" % self.name)
+
+            f = self.cb.create(Feed)
+            f.feed_url = "file://" + feed_helper.path
+            f.enabled = site.get('feeds_enable')
+            f.use_proxy = False
+            f.validate_server_cert = False
+            try:
+                f.save()
+            except ServerError as se:
+                if se.error_code == 500:
+                    logger.info("Could not add feed:")
+                    logger.info(
+                        " Received error code 500 from server. This is usually because the server cannot retrieve the feed.")
+                    logger.info(" Check to ensure the Cb server has network connectivity and the credentials are correct.")
+                else:
+                    logger.info("Could not add feed: {0:s}".format(str(se)))
+            except Exception as e:
+                logger.info("Could not add feed: {0:s}".format(str(e)))
+            else:
+                logger.info("Feed data: {0:s}".format(str(f)))
+                logger.info("Added feed. New feed ID is {0:d}".format(f.id))
+                feed_id = f.id
+
+        return feed_id
 
 
     def perform(self):
