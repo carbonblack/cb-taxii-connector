@@ -96,7 +96,7 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
     #
     description = ''
     if observable.description and observable.description.value:
-        description = observable.description.value
+        description = str(observable.description.value)
 
     #
     # if description is an empty string, then use the indicator's description
@@ -104,7 +104,7 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
     #
 
     if not description and indicator and indicator.description:
-        description = indicator.description.value
+        description = str(indicator.description.value)
 
 
     #

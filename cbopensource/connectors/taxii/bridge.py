@@ -55,6 +55,7 @@ class CbTaxiiFeedConverter(object):
         self.debug = config_dict.get('debug', False)
         self.export_dir = export_dir
         self.import_dir = import_dir
+        self.integration_name = 'Cb Taxii Connector 1.5.6'
 
         self.http_proxy_url = config_dict.get('http_proxy_url', None)
         self.https_proxy_url = config_dict.get('https_proxy_url', None)
@@ -66,7 +67,10 @@ class CbTaxiiFeedConverter(object):
         # Test Cb Response connectivity
         #
         try:
-            self.cb = CbResponseAPI()
+            self.cb = CbResponseAPI(url=self.server_url,
+                                    token=self.api_token,
+                                    ssl_verify=False,
+                                    integration_name=self.integration_name)
             self.cb.info()
         except:
             logger.error(traceback.format_exc())
@@ -372,7 +376,7 @@ class CbTaxiiFeedConverter(object):
             logger.info(e.message)
 
         if not feed_id:
-            logger.info("Creating %s feed for the first time" % self.name)
+            logger.info("Creating {} feed for the first time".format(sanitized_feed_name))
 
             f = self.cb.create(Feed)
             f.feed_url = "file://" + feed_helper.path
