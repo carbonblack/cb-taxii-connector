@@ -255,7 +255,7 @@ class CbTaxiiFeedConverter(object):
                         #
                         if data_set and stix_package.stix_header and stix_package.stix_header.descriptions:
                             for desc in stix_package.stix_header.descriptions:
-                                feed_summary = desc.value
+                                feed_summary = "{}: {}".format(desc.value, collection_name)
                                 break
 
 
