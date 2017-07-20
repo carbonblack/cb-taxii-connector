@@ -129,11 +129,12 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
 
 
     if type(props) == DomainName:
-        if props.value and props.value.condition and props.value.condition.lower().strip() == 'equals':
+        if props.value and props.value.value:
             iocs = {'dns': []}
             #
             # Sometimes props.value.value is a list
             #
+
             if type(props.value.value) is list:
                 for domain_name in props.value.value:
                     if validate_domain_name(domain_name.strip()):
@@ -142,7 +143,6 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
                 domain_name = props.value.value.strip()
                 if validate_domain_name(domain_name):
                     iocs['dns'].append(domain_name)
-
 
             if len(iocs['dns']) > 0:
                 reports.append({'iocs': iocs,
