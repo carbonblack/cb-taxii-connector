@@ -338,7 +338,12 @@ class CbTaxiiFeedConverter(object):
 
         logger.info("Found {} new reports.".format(len(reports)))
 
-        reports = feed_helper.load_existing_feed_data() + reports
+        if not data_set:
+            #
+            # We only want to concatenate if we are NOT a data set, otherwise we want to refresh all the reports
+            #
+            logger.info("Adding existing reports...")
+            reports = feed_helper.load_existing_feed_data() + reports
 
         logger.info("Total number of reports: {}".format(len(reports)))
 
