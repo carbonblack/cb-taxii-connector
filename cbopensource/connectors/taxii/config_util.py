@@ -117,6 +117,14 @@ def parse_config(config_file_path):
         if config.has_option(section, 'ca_cert'):
             ca_cert = config.get(section, 'ca_cert')
 
+        #
+        # Added the ability to limit the number of reports per collection
+        #
+        if config.has_option(section, 'reports_limit'):
+            reports_limit = config.getint(section, 'reports_limit')
+        else:
+            reports_limit = 10000
+
         logger.info("Configured Site: %s Path: %s" % (site, output_path))
 
         sites.append({"site": site,
@@ -136,7 +144,8 @@ def parse_config(config_file_path):
                       "discovery_path": discovery_path,
                       "collection_management_path": collection_management_path,
                       "poll_path": poll_path,
-                      "default_score": default_score})
+                      "default_score": default_score,
+                      "reports_limit": reports_limit})
 
         return {'server_url': server_url,
                 'api_token': api_token,

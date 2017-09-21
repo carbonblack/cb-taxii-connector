@@ -55,7 +55,7 @@ class CbTaxiiFeedConverter(object):
         self.debug = config_dict.get('debug', False)
         self.export_dir = export_dir
         self.import_dir = import_dir
-        self.integration_name = 'Cb Taxii Connector 1.5.6'
+        self.integration_name = 'Cb Taxii Connector 1.6.0'
 
         self.http_proxy_url = config_dict.get('http_proxy_url', None)
         self.https_proxy_url = config_dict.get('https_proxy_url', None)
@@ -266,8 +266,17 @@ class CbTaxiiFeedConverter(object):
 
                         if stix_package.indicators:
                             for indicator in stix_package.indicators:
+
                                 if not indicator or not indicator.observable:
                                     continue
+
+                                if indicator.confidence:
+                                    #
+                                    # Get the confidence score and use it for our score
+                                    #
+                                    score = int(indicator.confidence.to_dict().get("value", default_score))
+                                else:
+                                    score = default_score
 
                                 if not indicator.timestamp:
                                     timestamp = 0
@@ -275,7 +284,7 @@ class CbTaxiiFeedConverter(object):
                                     timestamp = int((indicator.timestamp -
                                                  datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds())
 
-                                reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp, default_score))
+                                reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp, score))
 
                         #
                         # Now lets find some data.  Iterate through all observables and parse
@@ -308,7 +317,9 @@ class CbTaxiiFeedConverter(object):
                 logger.info("content blocks read: {}".format(num_blocks))
                 logger.info("current number of reports: {}".format(len(reports)))
 
-
+                if len(reports) > site.get('reports_limit'):
+                    logger.info("We have reached the reports limit of {0}".format(site.get('reports_limit')))
+                    break
                 #
                 # DEBUG CODE
                 #
@@ -346,6 +357,10 @@ class CbTaxiiFeedConverter(object):
             reports = feed_helper.load_existing_feed_data() + reports
 
         logger.info("Total number of reports: {}".format(len(reports)))
+
+        if site.get('reports_limit') < len(reports):
+            logger.info("Truncating reports to length {0}".format(site.get('reports_limit')))
+            reports = reports[:site.get('reports_limit')]
 
         data = build_feed_data(sanitized_feed_name,
                                "%s %s" % (site.get('site'), collection_name),
