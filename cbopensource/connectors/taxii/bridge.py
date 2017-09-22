@@ -387,6 +387,7 @@ class CbTaxiiFeedConverter(object):
 
             elif len(feeds) > 1:
                 logger.warning("Multiple feeds found, selecting Feed id {}".format(feeds[0].id))
+                feed_id = feeds[0].id
 
             elif feeds:
                 feed_id = feeds[0].id
