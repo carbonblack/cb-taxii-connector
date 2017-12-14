@@ -203,6 +203,7 @@ class CbTaxiiFeedConverter(object):
                 if not data_set:
                     logger.info("polling start_date: {}, end_date: {}".format(feed_helper.start_date,feed_helper.end_date))
                 for block in content_blocks:
+                    logger.debug(block.content)
 
                     #
                     # if in export mode then save off this content block
