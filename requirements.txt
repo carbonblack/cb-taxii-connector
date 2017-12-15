@@ -3,4 +3,5 @@ stix==1.2.0.2
 cbapi==1.1.1 
 cabby==0.1.17
 pyinstaller==3.1.1
+lxml==3.8
 simplejson
