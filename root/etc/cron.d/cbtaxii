@@ -14,5 +14,5 @@
 # |  |  |  |  |
 # *  *  *  *  * user-name command to be executed
 
-# 0  *  *  *  * cb /usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf >> /var/log/cb/integrations/cbtaxii/cbtaxii.log 2>&1
+# 0  *  *  *  * cb /usr/share/cb/integrations/cbtaxii/bin/cb-taxii-connector -c /etc/cb/integrations/cbtaxii/cbtaxii.conf >> /var/log/cb/integrations/cbtaxii/cbtaxii.log 2>&1
 
