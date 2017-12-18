@@ -182,3 +182,14 @@ Additionally, due to STIX being a particulary verbose format, sometimes IOCs are
 ```
 /usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf --export
 ```
+
+## Build gotchas
+
+If this connector is going to run on Centos 6 then you need to use the source package of lxml from pip.  
+Use this command to grab python requirements:
+
+```
+pip install --no-binary lxml -r requirements.txt
+```
+
+
