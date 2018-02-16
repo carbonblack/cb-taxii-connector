@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$(id -u)" == "0" ]; then
-    sudo -u cb /usr/share/cb/integrations/cbtaxii/cb-taxii-connector $@
+    sudo -u cb /usr/share/cb/integrations/cbtaxii/bin/cb-taxii-connector $@
     exit 0
 fi
-/usr/share/cb/integrations/cbtaxii/cb-taxii-connector $@
+/usr/share/cb/integrations/cbtaxii/bin/cb-taxii-connector $@
