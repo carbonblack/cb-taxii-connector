@@ -186,7 +186,10 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
                     if validate_md5sum(md5.strip()):
                         iocs['md5'].append(md5.strip())
             else:
-                md5 = props.md5.strip()
+                if hasattr(props.md5, 'value'):
+                    md5 = props.md5.value.strip()
+                else:
+                    md5 = props.md5.strip()
                 if validate_md5sum(md5):
                     iocs['md5'].append(md5)
 

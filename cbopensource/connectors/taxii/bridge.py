@@ -123,7 +123,6 @@ class CbTaxiiFeedConverter(object):
         with open(full_file_name, 'wb') as file_handle:
             file_handle.write(message)
 
-
     def _import_collection(self, client, site, collection, data_set=False):
 
         collection_name = collection.name
@@ -133,10 +132,10 @@ class CbTaxiiFeedConverter(object):
         collection_type = collection.type
         default_score = site.get('default_score')
         logger.info("%s,%s,%s,%s,%s" % (site.get('site'),
-                                         collection_name,
-                                         sanitized_feed_name,
-                                         available,
-                                         collection_type))
+                                        collection_name,
+                                        sanitized_feed_name,
+                                        available,
+                                        collection_type))
 
         if not available:
             return False
@@ -147,7 +146,6 @@ class CbTaxiiFeedConverter(object):
         start_date_str = site.get('start_date')
         if not start_date_str or len(start_date_str) == 0:
             start_date_str = "2017-01-01 00:00:00"
-
 
         #
         # Create a feed helper object
@@ -194,14 +192,14 @@ class CbTaxiiFeedConverter(object):
                     logger.info(e.message)
                     content_blocks = []
 
-
                 #
                 # Iterate through all content_blocks
                 #
                 num_blocks = 0
 
                 if not data_set:
-                    logger.info("polling start_date: {}, end_date: {}".format(feed_helper.start_date,feed_helper.end_date))
+                    logger.info(
+                        "polling start_date: {}, end_date: {}".format(feed_helper.start_date, feed_helper.end_date))
                 for block in content_blocks:
                     logger.debug(block.content)
 
@@ -231,8 +229,6 @@ class CbTaxiiFeedConverter(object):
                                 "{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content_Block/{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content").text)
                             content.append(new_stix_package)
 
-
-
                         #
                         # Since we modified the xml, we need create a new xml message string to parse
                         #
@@ -248,7 +244,6 @@ class CbTaxiiFeedConverter(object):
                         #
                         stix_package = STIXPackage.from_xml(file_path)
 
-
                         #
                         # if it is a DATA_SET make feed_summary from the stix_header description
                         # NOTE: this is for RecordedFuture, also note that we only do this for data_sets.
@@ -258,7 +253,6 @@ class CbTaxiiFeedConverter(object):
                             for desc in stix_package.stix_header.descriptions:
                                 feed_summary = "{}: {}".format(desc.value, collection_name)
                                 break
-
 
                         #
                         # Get the timestamp of the STIX Package so we can use this in our feed
@@ -272,10 +266,21 @@ class CbTaxiiFeedConverter(object):
                                     continue
 
                                 if indicator.confidence:
-                                    #
-                                    # Get the confidence score and use it for our score
-                                    #
-                                    score = int(indicator.confidence.to_dict().get("value", default_score))
+
+                                    if str(indicator.confidence.value).isdigit():
+                                        #
+                                        # Get the confidence score and use it for our score
+                                        #
+                                        score = int(indicator.confidence.to_dict().get("value", default_score))
+                                    else:
+                                        if str(indicator.confidence.value).lower() == "high":
+                                            score = 75
+                                        elif str(indicator.confidence.value).lower() == "medium":
+                                            score = 50
+                                        elif str(indicator.confidence.value).lower() == "low":
+                                            score = 25
+                                        else:
+                                            score = default_score
                                 else:
                                     score = default_score
 
@@ -283,9 +288,11 @@ class CbTaxiiFeedConverter(object):
                                     timestamp = 0
                                 else:
                                     timestamp = int((indicator.timestamp -
-                                                 datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())).total_seconds())
+                                                     datetime.datetime(1970, 1, 1).replace(
+                                                         tzinfo=dateutil.tz.tzutc())).total_seconds())
 
-                                reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp, score))
+                                reports.extend(
+                                    cybox_parse_observable(indicator.observable, indicator, timestamp, score))
 
                         #
                         # Now lets find some data.  Iterate through all observables and parse
@@ -311,7 +318,7 @@ class CbTaxiiFeedConverter(object):
                         #
 
                     except Exception as e:
-                        #logger.info(traceback.format_exc())
+                        # logger.info(traceback.format_exc())
                         logger.info(e.message)
                         continue
 
@@ -324,7 +331,7 @@ class CbTaxiiFeedConverter(object):
                 #
                 # DEBUG CODE
                 #
-                #if len(reports) > 10:
+                # if len(reports) > 10:
                 #    break
 
                 #
@@ -370,7 +377,6 @@ class CbTaxiiFeedConverter(object):
                                site.get('icon_link'),
                                reports)
 
-
         if feed_helper.write_feed(data):
             feed_helper.save_details()
 
@@ -412,7 +418,8 @@ class CbTaxiiFeedConverter(object):
                     logger.info("Could not add feed:")
                     logger.info(
                         " Received error code 500 from server. This is usually because the server cannot retrieve the feed.")
-                    logger.info(" Check to ensure the Cb server has network connectivity and the credentials are correct.")
+                    logger.info(
+                        " Check to ensure the Cb server has network connectivity and the credentials are correct.")
                 else:
                     logger.info("Could not add feed: {0:s}".format(str(se)))
             except Exception as e:
@@ -423,7 +430,6 @@ class CbTaxiiFeedConverter(object):
                 feed_id = f.id
 
         return feed_id
-
 
     def perform(self):
         """
@@ -469,7 +475,6 @@ class CbTaxiiFeedConverter(object):
                                 ca_cert=site.get('ca_cert'),
                                 cert_file=site.get('cert_file'),
                                 key_file=site.get('key_file'))
-
 
             if not site.get('collection_management_path', ''):
                 collections = client.get_collections()
@@ -536,4 +541,3 @@ def runner(configpath, debug_mode, import_dir, export_dir):
             logger.error(traceback.format_exc())
             return False
     return True
-
