@@ -55,7 +55,7 @@ class CbTaxiiFeedConverter(object):
         self.debug = config_dict.get('debug', False)
         self.export_dir = export_dir
         self.import_dir = import_dir
-        self.integration_name = 'Cb Taxii Connector 1.6.1'
+        self.integration_name = 'Cb Taxii Connector 1.6.2'
 
         self.http_proxy_url = config_dict.get('http_proxy_url', None)
         self.https_proxy_url = config_dict.get('https_proxy_url', None)
