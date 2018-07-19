@@ -4,3 +4,4 @@ cbapi==1.1.1
 cabby==0.1.17
 pyinstaller==3.1.1
 simplejson
+lxml==4.2.3
