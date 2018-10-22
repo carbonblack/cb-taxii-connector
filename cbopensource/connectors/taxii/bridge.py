@@ -20,6 +20,7 @@ import logging
 import datetime
 import dateutil
 import dateutil.tz
+from tendo import singleton
 
 from cabby.constants import (
     CB_STIX_XML_111, CB_CAP_11, CB_SMIME,
@@ -517,27 +518,23 @@ class CbTaxiiFeedConverter(object):
                     self._import_collection(client, site, collection, data_set)
 
 
-@contextmanager
-def file_lock(lock_file):
-    if os.path.exists(lock_file):
-        pid = file(lock_file).read()
-        print 'Only one instance can run at once. ' \
-              'Script is locked with %s (pid: %s)' % (lock_file, pid)
-        sys.exit(-1)
-    else:
-        open(lock_file, 'w').write("%d" % os.getpid())
-        try:
-            yield
-        finally:
-            os.remove(lock_file)
-
-
 def runner(configpath, debug_mode, import_dir, export_dir):
-    with file_lock('/var/run/cb/cbtaxii.py.pid'):
-        try:
-            cbt = CbTaxiiFeedConverter(configpath, debug_mode, import_dir, export_dir)
-            cbt.perform()
-        except:
-            logger.error(traceback.format_exc())
-            return False
+    try:
+        #
+        # Setting nice inside script so we don't get killed by OOM
+        #
+        os.nice(1)
+
+        #
+        # run only one instance of this script
+        #
+        me = singleton.SingleInstance()
+        cbt = CbTaxiiFeedConverter(configpath, debug_mode, import_dir, export_dir)
+        cbt.perform()
+    except singleton.SingleInstanceException as e:
+        logger.error("Cannot run multiple copies of this script")
+        return False
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        return False
     return True
