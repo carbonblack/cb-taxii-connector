@@ -5,4 +5,3 @@ cabby==0.1.20
 pyinstaller==3.4
 simplejson
 lxml==4.2.5
-tendo
