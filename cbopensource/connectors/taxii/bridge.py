@@ -20,7 +20,7 @@ import logging
 import datetime
 import dateutil
 import dateutil.tz
-from tendo import singleton
+import singleton
 
 from cabby.constants import (
     CB_STIX_XML_111, CB_CAP_11, CB_SMIME,
