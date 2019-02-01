@@ -146,7 +146,7 @@ class CbTaxiiFeedConverter(object):
         #
         start_date_str = site.get('start_date')
         if not start_date_str or len(start_date_str) == 0:
-            start_date_str = "2017-01-01 00:00:00"
+            start_date_str = "2019-01-01 00:00:00"
 
         #
         # Create a feed helper object
@@ -180,9 +180,10 @@ class CbTaxiiFeedConverter(object):
 
         reports = []
         while True:
-
+            num_times_empty_content_blocks = 0
             try:
                 try:
+                    logger.info("Polling Collection: {0}".format(collection.name))
                     content_blocks = client.poll(uri=uri,
                                                  collection_name=collection.name,
                                                  begin_date=feed_helper.start_date,
@@ -259,6 +260,11 @@ class CbTaxiiFeedConverter(object):
                         # Get the timestamp of the STIX Package so we can use this in our feed
                         #
                         timestamp = total_seconds(stix_package.timestamp)
+
+                        if not stix_package.indicators and not stix_package.observables:
+                            num_times_empty_content_blocks += 1
+                            if num_times_empty_content_blocks > 10:
+                                break
 
                         if stix_package.indicators:
                             for indicator in stix_package.indicators:
