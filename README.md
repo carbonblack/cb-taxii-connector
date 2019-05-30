@@ -135,6 +135,11 @@ From here, one or more TAXII services can be configured. The example configurati
     # advance your requests to every 60 minutes or multiply 60 times 
     # number of hours, so 1440 to ask for data in daily chunks 
     minutes_to_advance=30
+
+    # (OPTIONAL)
+    # The number of reports to collect from each site, limited to 10K by default
+    # when ommited
+    reports_limit=10000
 ```    
 
 ## Execution
