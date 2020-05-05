@@ -1,30 +1,29 @@
-from util import *
-import traceback
+import datetime
+import logging
 import os
 import sys
-import time
 import tempfile
-from lxml import etree
+import time
+import traceback
 from contextlib import contextmanager
-from cb_feed_util import FeedHelper, build_feed_data
 
-from cbapi.response import CbResponseAPI, Feed
-from cbapi.example_helpers import get_object_by_name_or_id
-from cbapi.errors import ServerError
-
-from cabby import create_client
-from cybox_parse import cybox_parse_observable
-from stix.core import STIXPackage
-from config_util import parse_config
-import logging
-import datetime
 import dateutil
 import dateutil.tz
-import singleton
+from cabby import create_client
+from cabby.constants import (CB_CAP_11, CB_SMIME, CB_STIX_XML_10,
+                             CB_STIX_XML_11, CB_STIX_XML_101, CB_STIX_XML_111,
+                             CB_XENC_122002)
+from cbapi.errors import ServerError
+from cbapi.example_helpers import get_object_by_name_or_id
+from cbapi.response import CbResponseAPI, Feed
+from lxml import etree
+from stix.core import STIXPackage
 
-from cabby.constants import (
-    CB_STIX_XML_111, CB_CAP_11, CB_SMIME,
-    CB_STIX_XML_10, CB_STIX_XML_101, CB_STIX_XML_11, CB_XENC_122002)
+from .singleton import SingleInstance, SingleInstanceException
+from .cb_feed_util import FeedHelper, build_feed_data
+from .config_util import parse_config
+from .cybox_parse import cybox_parse_observable
+from .util import cleanup_string
 
 CB_STIX_XML_12 = 'urn:stix.mitre.org:xml:1.2'
 
@@ -433,7 +432,7 @@ class CbTaxiiFeedConverter(object):
                 logger.info("Could not add feed: {0:s}".format(str(e)))
             else:
                 logger.info("Feed data: {0:s}".format(str(f)))
-                logger.info("Added feed. New feed ID is {0:d}".format(f.id))
+                logger.info("Added feed. New feed ID is {0}".format(f.id))
                 feed_id = f.id
 
         return feed_id
@@ -534,10 +533,10 @@ def runner(configpath, debug_mode, import_dir, export_dir):
         #
         # run only one instance of this script
         #
-        me = singleton.SingleInstance()
+        me = SingleInstance()
         cbt = CbTaxiiFeedConverter(configpath, debug_mode, import_dir, export_dir)
         cbt.perform()
-    except singleton.SingleInstanceException as e:
+    except SingleInstanceException as e:
         logger.error("Cannot run multiple copies of this script")
         return False
     except Exception as e:

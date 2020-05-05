@@ -1,15 +1,16 @@
 %define name python-cbtaxii
-%define version 1.6
+%define version 1.6.7
 %define unmangled_version 1.6
-%define release 5
+%define release 0
+%define build_timestamp %(date +%%y%%m%%d.%%H%%m)
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 
 Summary: Carbon Black Taxii Connector
 Name: %{name}
-Version: %{version}
-Release: %{release}
+Version: %{version}.%{build_timestamp}
+Release: %{release}%{?dist}
 Source0: %{name}-%{unmangled_version}.tar.gz
 License: MIT
 Group: Development/Libraries

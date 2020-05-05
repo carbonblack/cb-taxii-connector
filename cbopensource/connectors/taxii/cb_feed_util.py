@@ -2,9 +2,8 @@ import os
 import simplejson as json
 import traceback
 from datetime import datetime, timedelta
-from util import TZ_UTC
-from cbfeeds import CbFeed
-from cbfeeds import CbFeedInfo
+from .util import TZ_UTC
+from cbfeeds import CbFeed, CbFeedInfo
 
 import logging
 
