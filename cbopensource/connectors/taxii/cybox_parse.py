@@ -156,55 +156,44 @@ def _cybox_parse_observable(observable, indicator, timestamp, score):
     else:
         title = str(uuid.uuid4())
 
-    if type(props) == DomainName:
-        if props.value and props.value.value:
-            reports.append({'iocs': get_report_from_props(props.value, target_key="value", ioc_label="dns", validator=validate_domain_name),
+    def append_report_if_iocs_found(props, target_key, ioc_label, validator):
+        iocs = get_iocs_from_props(
+            props, target_key=target_key, ioc_label=ioc_label, validator=validator)
+        if len(iocs) > 0:
+            reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
                             'description': description,
                             'title': title,
                             'timestamp': timestamp,
                             'link': link,
                             'score': score})
+
+    if type(props) == DomainName:
+        if props.value and props.value.value:
+            append_report_if_iocs_found(
+                props.value, target_key="value", ioc_label="dns", validator=validate_domain_name)
 
     elif type(props) == Address:
         if props.category == 'ipv4-addr' and props.address_value:
-            reports.append({'iocs': get_report_from_props(props.address_value, target_key="value", ioc_label="ipv4", validator=validate_ip_address),
-                            'id': sanitize_id(observable.id_),
-                            'description': description,
-                            'title': title,
-                            'timestamp': timestamp,
-                            'link': link,
-                            'score': score})
+            append_report_if_iocs_found(
+                props.address_value, target_key="value", ioc_label="ipv4", validator=validate_ip_address)
+
         if props.category == 'ipv6-addr' and props.address_value:
-            reports.append({'iocs': get_report_from_props(props.address_value, target_key="value", ioc_label="ipv6", validator=validate_ip_address),
-                            'id': sanitize_id(observable.id_),
-                            'description': description,
-                            'title': title,
-                            'timestamp': timestamp,
-                            'link': link,
-                            'score': score})
+            append_report_if_iocs_found(
+                props.address_value, target_key="value", ioc_label="ipv6", validator=validate_ip_address)
 
     elif type(props) == File:
         if props.md5:
-            reports.append({'iocs': get_report_from_props(props, target_key="md5", ioc_label="md5", validator=validate_md5sum),
-                            'id': sanitize_id(observable.id_),
-                            'description': description,
-                            'title': title,
-                            'timestamp': timestamp,
-                            'link': link,
-                            'score': score})
+            append_report_if_iocs_found(
+                props, target_key="md5", ioc_label="md5", validator=validate_md5sum)
         if props.sha256:
-            reports.append({'iocs': get_report_from_props(props),
-                            'id': sanitize_id(observable.id_),
-                            'description': description,
-                            'title': title,
-                            'timestamp': timestamp,
-                            'link': link,
-                            'score': score})
+            append_report_if_iocs_found(
+                props, target_key="sha256", ioc_label="sha256", validator=validate_sha256)
+
     return reports
 
 
-def get_report_from_props(props, target_key="sha256", ioc_label="sha256", validator=validate_sha256):
+def get_iocs_from_props(props, target_key="sha256", ioc_label="sha256", validator=validate_sha256):
     iocs = {ioc_label: []}
     target_prop = getattr(props, target_key)
     if type(target_prop) is list:

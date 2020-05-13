@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 def parse_config(config_file_path):
 
     config_defaults = {"server_url": "https://127.0.0.1", "auth_token": None,
-                                    "http_proxy_url": None, "https_proxy_url": None, "max_report_count": "{0}".format(2**32-1)}
+                                    "http_proxy_url": None, "https_proxy_url": None, "reports_limit": "{0}".format(10000)}
 
     config = ConfigParser.ConfigParser(defaults=config_defaults)
     if not os.path.exists(config_file_path):
@@ -25,8 +25,6 @@ def parse_config(config_file_path):
     http_proxy_url = config.get("cbconfig", 'http_proxy_url')
 
     https_proxy_url = config.get("cbconfig", 'https_proxy_url')
-
-    max_report_count = config.getint('cbconfig', 'max_report_count')
 
     sites = []
 
@@ -117,10 +115,7 @@ def parse_config(config_file_path):
         # Added the ability to limit the number of reports per collection
         #
 
-        if config.has_option(section, 'reports_limit'):
-            reports_limit = config.getint(section, 'reports_limit')
-        else:
-            reports_limit = max_report_count
+        reports_limit = config.getint(section, 'reports_limit')
 
         logger.info("Configured Site: %s Path: %s" % (site, output_path))
 
