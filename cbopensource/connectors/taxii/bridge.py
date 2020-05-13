@@ -154,7 +154,8 @@ class CbTaxiiFeedConverter(object):
             site.get('output_path'),
             sanitized_feed_name,
             site.get('minutes_to_advance'),
-            start_date_str)
+            start_date_str,
+            reset_start_date=site.get('reset_start_date'))
 
         if not data_set:
             logger.info("Feed start time %s" % feed_helper.start_date)
