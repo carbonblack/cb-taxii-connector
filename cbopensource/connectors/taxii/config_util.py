@@ -8,29 +8,24 @@ logger = logging.getLogger(__name__)
 
 def parse_config(config_file_path):
 
-    config = ConfigParser.ConfigParser()
+    config_defaults = {"server_url": "https://127.0.0.1", "auth_token": None,
+                                    "http_proxy_url": None, "https_proxy_url": None, "reports_limit": "{0}".format(10000),
+                                    "reset_start_date": "False"}
+
+    config = ConfigParser.ConfigParser(defaults=config_defaults)
     if not os.path.exists(config_file_path):
         logger.error("Config File: {} does not exist".format(config_file_path))
         sys.exit(-1)
 
     config.read(config_file_path)
 
-    server_url = "https://127.0.0.1"
-    if config.has_section("cbconfig"):
-        if config.has_option("cbconfig", "server_url"):
-            server_url = config.get("cbconfig", "server_url")
+    server_url = config.get("cbconfig", "server_url")
 
-    api_token = None
-    if config.has_option("cbconfig", "auth_token"):
-        api_token = config.get("cbconfig", "auth_token")
+    api_token = config.get("cbconfig", "auth_token")
 
-    http_proxy_url = None
-    if config.has_option("cbconfig", 'http_proxy_url'):
-        http_proxy_url = config.get("cbconfig", 'http_proxy_url')
+    http_proxy_url = config.get("cbconfig", 'http_proxy_url')
 
-    https_proxy_url = None
-    if config.has_option("cbconfig", 'https_proxy_url'):
-        https_proxy_url = config.get("cbconfig", 'https_proxy_url')
+    https_proxy_url = config.get("cbconfig", 'https_proxy_url')
 
     sites = []
 
@@ -65,6 +60,7 @@ def parse_config(config_file_path):
         feeds_enable = config.getboolean(section, "feeds_enable")
         collections = config.get(section, "collections") if config.has_option(section, "collections") else "*"
         default_score = config.getint(section, "default_score") if config.has_option(section, "default_score") else 50
+        reset_start_date = config.getboolean(section, "reset_start_date")
 
         if config.has_option(section, "start_date"):
             start_date = config.get(section, "start_date")
@@ -120,14 +116,13 @@ def parse_config(config_file_path):
         #
         # Added the ability to limit the number of reports per collection
         #
-        if config.has_option(section, 'reports_limit'):
-            reports_limit = config.getint(section, 'reports_limit')
-        else:
-            reports_limit = 10000
+
+        reports_limit = config.getint(section, 'reports_limit')
 
         logger.info("Configured Site: %s Path: %s" % (site, output_path))
 
         sites.append({"site": site,
+                      "reset_start_date": reset_start_date,
                       "output_path": output_path,
                       "username": username,
                       "password": password,

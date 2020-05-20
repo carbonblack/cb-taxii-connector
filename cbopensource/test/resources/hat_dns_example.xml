@@ -1,0 +1,32 @@
+<stix:STIX_Package xmlns:cyboxCommon="http://cybox.mitre.org/common-2" xmlns:cybox="http://cybox.mitre.org/cybox-2" xmlns:cyboxVocabs="http://cybox.mitre.org/default_vocabularies-2" xmlns:DomainNameObj="http://cybox.mitre.org/objects#DomainNameObject-1" xmlns:marking="http://data-marking.mitre.org/Marking-1" xmlns:simpleMarking="http://data-marking.mitre.org/extensions/MarkingStructure#Simple-1" xmlns:tlpMarking="http://data-marking.mitre.org/extensions/MarkingStructure#TLP-1" xmlns:TOUMarking="http://data-marking.mitre.org/extensions/MarkingStructure#Terms_Of_Use-1" xmlns:opensource="http://hailataxii.com" xmlns:edge="http://soltra.com/" xmlns:stixCommon="http://stix.mitre.org/common-1" xmlns:stixVocabs="http://stix.mitre.org/default_vocabularies-1" xmlns:stix="http://stix.mitre.org/stix-1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:taxii="http://taxii.mitre.org/messages/taxii_xml_binding-1" xmlns:taxii_11="http://taxii.mitre.org/messages/taxii_xml_binding-1.1" xmlns:tdq="http://taxii.mitre.org/query/taxii_default_query-1" id="edge:Package-0e480b57-152d-4077-a1bb-8671327634ed" version="1.1.1" timestamp="2020-05-12T11:27:06.303495+00:00">
+    <stix:STIX_Header>
+        <stix:Handling>
+            <marking:Marking>
+                <marking:Controlled_Structure>../../../../descendant-or-self::node()</marking:Controlled_Structure>
+                <marking:Marking_Structure xsi:type="tlpMarking:TLPMarkingStructureType" color="WHITE"/>
+                <marking:Marking_Structure xsi:type="TOUMarking:TermsOfUseMarkingStructureType">
+                    <TOUMarking:Terms_Of_Use>torstatus.blutmagie.de | http://torstatus.blutmagie.de - HailATaxii.com (HAT) has made a 'best effort' attempt to find/determined the TOU (Term of Use) for this site's data, however none was found.
+
+- HAT assumes that attribution is a minimum requirement.
+- HAT assumes this data was created and owned by torstatus.blutmagie.de.
+- HAT has only modified the format of the data from CSV to STIX, and has not made any changes to the contains of the data as it was received at the time of conversion.
+</TOUMarking:Terms_Of_Use>
+                </marking:Marking_Structure>
+                <marking:Marking_Structure xsi:type="simpleMarking:SimpleMarkingStructureType">
+                    <simpleMarking:Statement>Unclassified (Public)</simpleMarking:Statement>
+                </marking:Marking_Structure>
+            </marking:Marking>
+        </stix:Handling>
+    </stix:STIX_Header>
+    <stix:Observables cybox_major_version="2" cybox_minor_version="1" cybox_update_version="0">
+        <cybox:Observable id="opensource:Observable-23e197c2-72fd-4fc7-9b0f-c052bea67afe" sighting_count="1">
+            <cybox:Title>Domain: fctnnbsc38w-47-54-126-15.dhcp-dynamic.fibreop.nb.bellaliant.net</cybox:Title>
+            <cybox:Description>Domain: fctnnbsc38w-47-54-126-15.dhcp-dynamic.fibreop.nb.bellaliant.net | isFQDN: True | </cybox:Description>
+            <cybox:Object id="opensource:DomainName-7e8ea997-3096-4d11-b07f-f2be62c285bf">
+                <cybox:Properties xsi:type="DomainNameObj:DomainNameObjectType">
+                    <DomainNameObj:Value condition="Equals">fctnnbsc38w-47-54-126-15.dhcp-dynamic.fibreop.nb.bellaliant.net</DomainNameObj:Value>
+                </cybox:Properties>
+            </cybox:Object>
+        </cybox:Observable>
+    </stix:Observables>
+</stix:STIX_Package>

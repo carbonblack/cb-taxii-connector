@@ -2,9 +2,8 @@ import os
 import simplejson as json
 import traceback
 from datetime import datetime, timedelta
-from util import TZ_UTC
-from cbfeeds import CbFeed
-from cbfeeds import CbFeedInfo
+from .util import TZ_UTC
+from cbfeeds import CbFeed, CbFeedInfo
 
 import logging
 
@@ -12,13 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class FeedHelper(object):
-    def __init__(self, output_dir, feed_name, minutes_to_advance, start_date_str):
+    def __init__(self, output_dir, feed_name, minutes_to_advance, start_date_str, reset_start_date=False):
         self.output_dir = output_dir
         self.feed_name = feed_name
         self.minutes_to_advance = minutes_to_advance
         self.path = os.path.join(output_dir, feed_name)
         self.details_path = self.path + ".details"
-        self.init_feed_details(start_date_str)
+        self.init_feed_details(start_date_str, ignore_feed_details=reset_start_date)
 
         self.start_date = datetime.strptime(
             self.feed_details.get('latest'),
@@ -31,9 +30,9 @@ class FeedHelper(object):
         if self.end_date > self.now:
             self.end_date = self.now
 
-    def init_feed_details(self, start_date):
+    def init_feed_details(self, start_date, ignore_feed_details=False):
         self.feed_details = {"latest": start_date}
-        if os.path.exists(self.details_path):
+        if os.path.exists(self.details_path) and not ignore_feed_details:
             try:
                 with open(self.details_path, 'rb') as file_handle:
                     self.feed_details = json.loads(file_handle.read())
