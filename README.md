@@ -8,6 +8,12 @@ You can install the pre-built RPMs via YUM by using the CB Open Source repositor
 The pre-built RPM is supported via our [User eXchange (Jive)](https://community.carbonblack.com/community/developer-relations) 
 and via email to dev-support@carbonblack.com.  
 
+## Support
+
+1. View all API and integration offerings on the [Developer Network](https://developer.carbonblack.com/) along with reference documentation, video tutorials, and how-to guides.
+2. Use the [Developer Community Forum](https://community.carbonblack.com/t5/Developer-Relations/bd-p/developer-relations) to discuss issues and get answers from other API developers in the Carbon Black Community.
+3. Report bugs and change requests to [Carbon Black Support](http://carbonblack.com/resources/support/).
+
 ## Introduction
 
 This document describes how to install and use the Cb Response TAXII Connector. This connector allows for the importing of STIX data by querying one or more TAXII services and retrieving that data and then converting it into CB feeds using the CB JSON format for IOCs. The job queries for available STIX/TAXII data that is newer than the last time it asked, and by default runs every hour.
