@@ -48,6 +48,9 @@ chmod +x /usr/share/cb/integrations/cbtaxii/cbtaxii
 chmod -R u+r /usr/share/cb/integrations/cbtaxii/bin
 chmod -R g+r /usr/share/cb/integrations/cbtaxii/bin
 chmod -R o+r /usr/share/cb/integrations/cbtaxii/bin
+chmod -R u+r /usr/share/cb/integrations/cbtaxii/bin/cbapi/
+chmod -R g+r /usr/share/cb/integrations/cbtaxii/bin/cbapi/
+chmod -R o+r /usr/share/cb/integrations/cbtaxii/bin/cbapi/
 
 %files -f INSTALLED_FILES
 %defattr(-,root,root)
