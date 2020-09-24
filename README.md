@@ -1,4 +1,4 @@
-# cb-taxii-connector
+# cb-taxii-connector (Centos 6/7/8)
 
 Connector for pulling and converting STIX information from TAXII Service Providers into CB Feeds.
 
