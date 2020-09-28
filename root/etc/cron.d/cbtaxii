@@ -1,9 +1,9 @@
-# This file defines the schedule for Carbon Black Enterprise Server's maintenance jobs
+# This file defines the schedule for EDR's maintenance jobs
 #
 # This file is sourced from /etc/cb/cron/cb.cron.template each time CB Enterprise is started.
 # If you would like to make changes to the crontab, please make sure they are reflected in
 # /etc/cb/cron/cb.cron.template as /etc/cron.d/cb will be overwritten as part of the
-# CB Enterprise startup process.
+# EDR startup process.
 
 # Cron job definition:
 # .---------------- minute (0 - 59)

@@ -1,6 +1,6 @@
 
 # CBTAXII CONFIGURATION FILE
-# Imports taxii/stix feeds into Carbon Black feeds
+# Imports TAXII/STIX feeds into VMware Carbon Black EDR feeds
 
 # general cbconfig options
 

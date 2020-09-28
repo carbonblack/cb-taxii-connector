@@ -1,6 +1,6 @@
 # cb-taxii-connector (Centos 6/7/8)
 
-Connector for pulling and converting STIX information from TAXII Service Providers into CB Feeds.
+VMware Carbon Black EDR connector for pulling and converting STIX information from TAXII Service Providers into EDR Feeds.
 
 You can install the pre-built RPMs via YUM by using the CB Open Source repository.
 *(See CbOpenSource.repo and put that in /etc/yum.repos.d/)*
@@ -29,9 +29,9 @@ The following IOC types are extracted from STIX data:
 	
 ## Requirements
 
-This Cb Response TAXII Connector has the following requirements:
+This EDR TAXII Connector has the following requirements:
 
-* *Carbon Black Enterprise Response Server 5.0 (or greater)* – this integration leverages API calls and feed functionality available in Cb Response 5.0 and newer.  In order to check the version, you can run the following rpm command on your server:
+* *VMware Carbon Black EDR 5.0 (or greater)* – this integration leverages API calls and feed functionality available in Cb Response 5.0 and newer.  In order to check the version, you can run the following rpm command on your server:
 
 ```
 [root@localhost ~]# rpm -qa | grep cb-enterprise
@@ -71,7 +71,7 @@ mv /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxi
 From here, one or more TAXII services can be configured. The example configuration file is placed here along with the comments it contains:
 
 ```
-    # Imports taxii/stix feeds into Carbon Black feeds 
+    # Imports taxii/stix feeds into VMware Carbon Black EDR feeds
     
     # general cbconfig options
     [cbconfig]
