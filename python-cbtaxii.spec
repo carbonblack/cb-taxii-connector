@@ -1,13 +1,13 @@
 %define name python-cbtaxii
-%define version 1.6.7
-%define unmangled_version 1.6
+%define version 1.6.8
+%define unmangled_version 1.6.8
 %define release 1
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 %define _build_id_links none
 
-Summary: Carbon Black Taxii Connector
+Summary: VMware Carbon Black EDR Taxii Connector
 Name: %{name}
 Version: %{version}
 Release: %{release}%{?dist}
@@ -17,7 +17,7 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: x86_64
-Vendor: Carbon Black
+Vendor: VMware Carbon Black
 Url: http://www.carbonblack.com/
 
 %description

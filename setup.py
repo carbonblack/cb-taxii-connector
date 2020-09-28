@@ -143,14 +143,14 @@ scripts = {
 
 setup(
     name='python-cbtaxii',
-    version='1.6',
+    version='1.6.8',
     packages=['cbopensource', 'cbopensource.connectors', 'cbopensource.connectors.taxii'],
     url='https://github.com/carbonblack/cb-taxii-connector',
     license='MIT',
     author='Carbon Black Developer Network',
     author_email='dev-support@carbonblack.com',
     description=
-        'Connector between Carbon Black and taxii',
+        'Connector between VMware Carbon Black EDR and TAXII',
     data_files=data_files,
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -167,6 +167,6 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
     ],
-    keywords='carbonblack bit9',
+    keywords='vmware carbonblack bit9',
     cmdclass={'install_cb': install_cb, 'bdist_binaryrpm': bdist_binaryrpm}
 )
