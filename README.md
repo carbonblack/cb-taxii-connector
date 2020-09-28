@@ -1,4 +1,4 @@
-# cb-taxii-connector (Centos 6/7/8)
+# cb-taxii-connector (CentOS 6/7/8)
 
 VMware Carbon Black EDR connector for pulling and converting STIX information from TAXII Service Providers into EDR Feeds.
 
