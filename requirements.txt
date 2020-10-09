@@ -6,3 +6,4 @@ pyinstaller==3.6
 simplejson
 lxml==4.2.5
 ipaddress
+configparser
