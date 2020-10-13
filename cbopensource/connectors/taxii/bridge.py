@@ -9,13 +9,13 @@ import sys
 import tempfile
 import time
 import traceback
-from contextlib import contextmanager
+from typing import AnyStr, List, Optional, Tuple, Union
 
 import dateutil
 import dateutil.tz
-from cabby import create_client
-from cabby.constants import (CB_CAP_11, CB_SMIME, CB_STIX_XML_10,
-                             CB_STIX_XML_11, CB_STIX_XML_101, CB_STIX_XML_111,
+from cabby.entities import Collection as CabbyCollection
+from cabby import Client10, Client11, create_client
+from cabby.constants import (CB_CAP_11, CB_SMIME, CB_STIX_XML_10, CB_STIX_XML_101, CB_STIX_XML_11, CB_STIX_XML_111,
                              CB_XENC_122002)
 from cbapi.errors import ServerError
 from cbapi.example_helpers import get_object_by_name_or_id
@@ -23,10 +23,10 @@ from cbapi.response import CbResponseAPI, Feed
 from lxml import etree
 from stix.core import STIXPackage
 
-from .singleton import SingleInstance, SingleInstanceException
-from .cb_feed_util import FeedHelper, build_feed_data
+from .cb_feed_util import build_feed_data, FeedHelper
 from .config_util import parse_config
 from .cybox_parse import cybox_parse_observable
+from .singleton import SingleInstance, SingleInstanceException
 from .util import cleanup_string
 
 CB_STIX_XML_12 = 'urn:stix.mitre.org:xml:1.2'
@@ -35,23 +35,41 @@ BINDING_CHOICES = [CB_STIX_XML_111, CB_CAP_11, CB_SMIME, CB_STIX_XML_12,
                    CB_STIX_XML_10, CB_STIX_XML_101, CB_STIX_XML_11,
                    CB_XENC_122002]
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-def total_seconds(td):
+def total_seconds(td: datetime) -> int:
+    """
+    Simple method to return integer time in seconds from a supplied datetime.
+
+    :param td: datetime object to be converted
+    :return: epoch time in seconds
+    """
     try:
         return int(time.mktime(td.timetuple()))
-    except:
+    except Exception as err:
+        _logger.debug(f"Supplied `td` could not be converted: {err}")
         return 0
 
 
 class CbTaxiiFeedConverter(object):
-    def __init__(self, config_file_path, debug_mode=False, import_dir='', export_dir=''):
+    """
+    Class to convert TAXII feeds into local feeds.
+    """
 
-        #
-        # parse config file and save off the information we need
-        #
+    def __init__(self, config_file_path: str, debug_mode: bool = False, import_dir: str = '',
+                 export_dir: Optional[str] = None):
+        """
+        Parse config file and save off the information we need.
+
+        :param config_file_path: configuration file location
+        :param debug_mode: If True, operate in debug mode
+        :param import_dir: feed import directory
+        :param export_dir: export directory (optional)
+        """
         config_dict = parse_config(config_file_path)
+        if debug_mode:
+            _logger.debug(f"Config: {config_dict}")
 
         self.server_url = config_dict.get('server_url', 'https://127.0.0.1')
         self.api_token = config_dict.get('api_token', '')
@@ -64,6 +82,7 @@ class CbTaxiiFeedConverter(object):
         self.http_proxy_url = config_dict.get('http_proxy_url', None)
         self.https_proxy_url = config_dict.get('https_proxy_url', None)
 
+        # if export ing, make sure the directory exists
         if self.export_dir and not os.path.exists(self.export_dir):
             os.mkdir(self.export_dir)
 
@@ -76,70 +95,80 @@ class CbTaxiiFeedConverter(object):
                                     ssl_verify=False,
                                     integration_name=self.integration_name)
             self.cb.info()
-        except:
-            logger.error(traceback.format_exc())
+        except Exception as err:
+            _logger.error(f"Failed to make connection: {err}", exc_info=True)
             sys.exit(-1)
 
-    def write_to_temp_file(self, message):
+    @staticmethod
+    def write_to_temp_file(message: AnyStr) -> Tuple[tempfile.NamedTemporaryFile, str]:
+        """
+        Write text to a temp file for later use.
+
+        :param message: text to be saved
+        :return: Tuple of (NamedTemporaryFile, tempfile name)
+        """
         temp_file = tempfile.NamedTemporaryFile()
         temp_file.write(message)
         temp_file.flush()
         return temp_file, temp_file.name
 
-    def read_from_xml(self):
+    # NOTE: currently unused; retained for future need
+    # noinspection PyUnusedFunction
+    def read_from_xml(self) -> List[str]:
         """
-        Walk the import dir and return all filenames.  We are assuming all xml files
-        :return:
-        """
-        f = []
-        for (dirpath, dirnames, filenames) in os.walk(self.import_dir):
-            f.extend(filenames)
-            break
-        return f
+        Walk the import dir and return all filenames.  We are assuming all xml files.
 
-    def export_xml(self, feed_name, start_time, end_time, block_num, message):
+        :return: List of filenames
         """
-        :param feed_name:
-        :param start_time:
-        :param end_time:
-        :param block_num:
-        :param message:
-        :return:
+        the_list = []
+        for (dirpath, dirnames, filenames) in os.walk(self.import_dir):
+            the_list.extend(filenames)
+            break
+        return the_list
+
+    def export_xml(self, feed_name: str, start_time: str, end_time: str, block_num: int, message: AnyStr) -> None:
         """
-        #
+        :param feed_name: name of the feed, for the holding directory name
+        :param start_time: start time
+        :param end_time: end time
+        :param block_num: write block number (for uniqueness)
+        :param message: feed text
+        """
         # create a directory to store all content blocks
-        #
-        dir_name = "{}".format(feed_name).replace(' ', '_')
+        dir_name = f"{feed_name}".replace(' ', '_')
         full_dir_name = os.path.join(self.export_dir, dir_name)
 
-        #
         # Make sure the directory exists
-        #
         if not os.path.exists(os.path.join(self.export_dir, dir_name)):
             os.mkdir(full_dir_name)
 
-        #
         # Actually write the file
-        #
-        file_name = "{}-{}-{}".format(start_time, end_time, block_num).replace(' ', "_")
+        file_name = f"{start_time}-{end_time}-{block_num}".replace(' ', "_")
         full_file_name = os.path.join(full_dir_name, file_name)
 
         with open(full_file_name, 'wb') as file_handle:
             file_handle.write(message)
 
-    def _import_collection(self, client, site, collection, data_set=False):
+    def _import_collection(self, client, site: dict, collection: CabbyCollection, data_set: bool = False):
+        """
 
+        :param client:
+        :param site:
+        :param collection:
+        :param data_set:
+        :return:
+        """
         collection_name = collection.name
         sanitized_feed_name = cleanup_string("%s%s" % (site.get('site'), collection_name))
         feed_summary = "%s %s" % (site.get('site'), collection_name)
         available = collection.available
         collection_type = collection.type
         default_score = site.get('default_score')
-        logger.info("%s,%s,%s,%s,%s" % (site.get('site'),
-                                        collection_name,
-                                        sanitized_feed_name,
-                                        available,
-                                        collection_type))
+        _logger.info("%s,%s,%s,%s,%s" % (site.get('site'),
+                                         collection_name,
+                                         sanitized_feed_name,
+                                         available,
+                                         collection_type))
 
         if not available:
             return False
@@ -162,8 +191,8 @@ class CbTaxiiFeedConverter(object):
             reset_start_date=site.get('reset_start_date'))
 
         if not data_set:
-            logger.info("Feed start time %s" % feed_helper.start_date)
-        logger.info("polling Collection: {}...".format(collection.name))
+            _logger.info("Feed start time %s" % feed_helper.start_date)
+        _logger.info("polling Collection: {}...".format(collection.name))
 
         #
         # Build up the URI for polling
@@ -180,14 +209,14 @@ class CbTaxiiFeedConverter(object):
 
             uri += site.get('site')
             uri += site.get('poll_path')
-            logger.info('Poll path: {}'.format(uri))
+            _logger.info('Poll path: {}'.format(uri))
 
         reports = []
         while True:
             num_times_empty_content_blocks = 0
             try:
                 try:
-                    logger.info("Polling Collection: {0}".format(collection.name))
+                    _logger.info("Polling Collection: {0}".format(collection.name))
                     content_blocks = client.poll(uri=uri,
                                                  collection_name=collection.name,
                                                  begin_date=feed_helper.start_date,
@@ -195,7 +224,7 @@ class CbTaxiiFeedConverter(object):
                                                  content_bindings=BINDING_CHOICES)
 
                 except Exception as e:
-                    logger.info(e.message)
+                    _logger.info(f"{e}")
                     content_blocks = []
 
                 #
@@ -204,10 +233,10 @@ class CbTaxiiFeedConverter(object):
                 num_blocks = 0
 
                 if not data_set:
-                    logger.info(
+                    _logger.info(
                         "polling start_date: {}, end_date: {}".format(feed_helper.start_date, feed_helper.end_date))
                 for block in content_blocks:
-                    logger.debug(block.content)
+                    _logger.debug(block.content)
 
                     #
                     # if in export mode then save off this content block
@@ -330,14 +359,14 @@ class CbTaxiiFeedConverter(object):
 
                     except Exception as e:
                         # logger.info(traceback.format_exc())
-                        logger.info(e.message)
+                        _logger.info(f"{e}")
                         continue
 
-                logger.info("content blocks read: {}".format(num_blocks))
-                logger.info("current number of reports: {}".format(len(reports)))
+                _logger.info("content blocks read: {}".format(num_blocks))
+                _logger.info("current number of reports: {}".format(len(reports)))
 
                 if len(reports) > site.get('reports_limit'):
-                    logger.info("We have reached the reports limit of {0}".format(site.get('reports_limit')))
+                    _logger.info("We have reached the reports limit of {0}".format(site.get('reports_limit')))
                     break
                 #
                 # DEBUG CODE
@@ -350,7 +379,7 @@ class CbTaxiiFeedConverter(object):
                 #
 
             except Exception as e:
-                logger.info(traceback.format_exc())
+                _logger.info(traceback.format_exc())
 
             #
             # If it is just a data_set, the data is unordered, so we can just break out of the while loop
@@ -366,19 +395,19 @@ class CbTaxiiFeedConverter(object):
             # end While True
             #
 
-        logger.info("Found {} new reports.".format(len(reports)))
+        _logger.info("Found {} new reports.".format(len(reports)))
 
         if not data_set:
             #
             # We only want to concatenate if we are NOT a data set, otherwise we want to refresh all the reports
             #
-            logger.info("Adding existing reports...")
+            _logger.info("Adding existing reports...")
             reports = feed_helper.load_existing_feed_data() + reports
 
-        logger.info("Total number of reports: {}".format(len(reports)))
+        _logger.info("Total number of reports: {}".format(len(reports)))
 
         if site.get('reports_limit') < len(reports):
-            logger.info("Truncating reports to length {0}".format(site.get('reports_limit')))
+            _logger.info("Truncating reports to length {0}".format(site.get('reports_limit')))
             reports = reports[:site.get('reports_limit')]
 
         data = build_feed_data(sanitized_feed_name,
@@ -401,21 +430,21 @@ class CbTaxiiFeedConverter(object):
             feeds = get_object_by_name_or_id(self.cb, Feed, name=sanitized_feed_name)
 
             if not feeds:
-                logger.info("Feed {} was not found, so we are going to create it".format(sanitized_feed_name))
+                _logger.info("Feed {} was not found, so we are going to create it".format(sanitized_feed_name))
 
             elif len(feeds) > 1:
-                logger.warning("Multiple feeds found, selecting Feed id {}".format(feeds[0].id))
+                _logger.warning("Multiple feeds found, selecting Feed id {}".format(feeds[0].id))
                 feed_id = feeds[0].id
 
             elif feeds:
                 feed_id = feeds[0].id
-                logger.info("Feed {} was found as Feed ID {}".format(sanitized_feed_name, feed_id))
+                _logger.info("Feed {} was found as Feed ID {}".format(sanitized_feed_name, feed_id))
 
         except Exception as e:
-            logger.info(e.message)
+            _logger.info(f"{e}")
 
         if not feed_id:
-            logger.info("Creating {} feed for the first time".format(sanitized_feed_name))
+            _logger.info("Creating {} feed for the first time".format(sanitized_feed_name))
 
             f = self.cb.create(Feed)
             f.feed_url = "file://" + feed_helper.path
@@ -426,33 +455,30 @@ class CbTaxiiFeedConverter(object):
                 f.save()
             except ServerError as se:
                 if se.error_code == 500:
-                    logger.info("Could not add feed:")
-                    logger.info(
+                    _logger.info("Could not add feed:")
+                    _logger.info(
                         " Received error code 500 from server. This is usually because the server cannot retrieve the feed.")
-                    logger.info(
+                    _logger.info(
                         " Check to ensure the Cb server has network connectivity and the credentials are correct.")
                 else:
-                    logger.info("Could not add feed: {0:s}".format(str(se)))
+                    _logger.info("Could not add feed: {0:s}".format(str(se)))
             except Exception as e:
-                logger.info("Could not add feed: {0:s}".format(str(e)))
+                _logger.info("Could not add feed: {0:s}".format(str(e)))
             else:
-                logger.info("Feed data: {0:s}".format(str(f)))
-                logger.info("Added feed. New feed ID is {0}".format(f.id))
+                _logger.info("Feed data: {0:s}".format(str(f)))
+                _logger.info("Added feed. New feed ID is {0}".format(f.id))
                 feed_id = f.id
 
         return feed_id
 
-    def perform(self):
+    def perform(self) -> None:
         """
-        :param self:
-        :param enumerate_collections_only:
-        :return:
+        Perform the taxii hailing service.
         """
         for site in self.sites:
-
-            client = create_client(site.get('site'),
-                                   use_https=site.get('use_https'),
-                                   discovery_path=site.get('discovery_path'))
+            client: Union[Client10, Client11] = create_client(site.get('site'),
+                                                              use_https=site.get('use_https'),
+                                                              discovery_path=site.get('discovery_path'))
 
             #
             # Set verify_ssl and ca_cert inside the client
@@ -465,11 +491,11 @@ class CbTaxiiFeedConverter(object):
             proxy_dict = dict()
 
             if self.http_proxy_url:
-                logger.info("Found HTTP Proxy: {}".format(self.http_proxy_url))
+                _logger.info("Found HTTP Proxy: {}".format(self.http_proxy_url))
                 proxy_dict['http'] = self.http_proxy_url
 
             if self.https_proxy_url:
-                logger.info("Found HTTPS Proxy: {}".format(self.https_proxy_url))
+                _logger.info("Found HTTPS Proxy: {}".format(self.https_proxy_url))
                 proxy_dict['https'] = self.https_proxy_url
 
             if proxy_dict:
@@ -479,7 +505,7 @@ class CbTaxiiFeedConverter(object):
                 #
                 # If a username is supplied use basic authentication
                 #
-                logger.info("Found Username in config, using basic auth...")
+                _logger.info("Found Username in config, using basic auth...")
                 client.set_auth(username=site.get('username'),
                                 password=site.get('password'),
                                 verify_ssl=site.get('ssl_verify'),
@@ -498,15 +524,15 @@ class CbTaxiiFeedConverter(object):
 
                 uri += site.get('site')
                 uri += site.get('collection_management_path')
-                logger.info('Collection Management Path: {}'.format(uri))
+                _logger.info('Collection Management Path: {}'.format(uri))
 
-                collections = client.get_collections(uri=uri)
+                collections: List[CabbyCollection] = client.get_collections(uri=uri)
 
             for collection in collections:
-                logger.info('Collection Name: {}, Collection Type: {}'.format(collection.name, collection.type))
+                _logger.info(f'Collection Name: {collection.name}, Collection Type: {collection.type}')
 
             if len(collections) == 0:
-                logger.info('Unable to find any collections.  Exiting...')
+                _logger.info('Unable to find any collections.  Exiting...')
                 sys.exit(0)
 
             desired_collections = [x.strip() for x in site.get('collections').lower().split(',')]
@@ -542,9 +568,9 @@ def runner(configpath, debug_mode, import_dir, export_dir):
         cbt = CbTaxiiFeedConverter(configpath, debug_mode, import_dir, export_dir)
         cbt.perform()
     except SingleInstanceException as e:
-        logger.error("Cannot run multiple copies of this script")
+        _logger.error("Cannot run multiple copies of this script")
         return False
     except Exception as e:
-        logger.error(traceback.format_exc())
+        _logger.error(traceback.format_exc())
         return False
     return True

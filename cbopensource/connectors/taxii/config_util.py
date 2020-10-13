@@ -1,49 +1,50 @@
+#  coding: utf-8
+#  VMware Carbon Black EDR Taxii Connector © 2013-2020 VMware, Inc. All Rights Reserved.
+################################################################################
+
 import logging
-import ConfigParser
 import os
 import sys
+from configparser import ConfigParser
+from typing import Dict, List, Union
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-def parse_config(config_file_path):
+def parse_config(config_file_path: str) -> Dict[str, Union[str, List[Dict]]]:
+    """
+    Read a configuration file into a local dictionary for easier access.
 
+    :param config_file_path: path to the config file
+    :return: compiled dictionary
+    """
     config_defaults = {"server_url": "https://127.0.0.1", "auth_token": None,
-                                    "http_proxy_url": None, "https_proxy_url": None, "reports_limit": "{0}".format(10000),
-                                    "reset_start_date": "False"}
+                       "http_proxy_url": None, "https_proxy_url": None, f"reports_limit": "10000",
+                       "reset_start_date": "False"}
 
     config = ConfigParser.ConfigParser(defaults=config_defaults)
     if not os.path.exists(config_file_path):
-        logger.error("Config File: {} does not exist".format(config_file_path))
+        _logger.error(f"Config File: {config_file_path} does not exist")
         sys.exit(-1)
 
     config.read(config_file_path)
 
     server_url = config.get("cbconfig", "server_url")
-
     api_token = config.get("cbconfig", "auth_token")
-
     http_proxy_url = config.get("cbconfig", 'http_proxy_url')
-
     https_proxy_url = config.get("cbconfig", 'https_proxy_url')
 
     sites = []
 
     for section in config.sections():
-        #
         # exclude cbconfig stanza
-        #
         if section.lower() == 'cbconfig':
             continue
 
-        #
         # get site and strip off preceeding http(s):// if necessary
-        #
         site = config.get(section, "site").lower()
 
-        #
-        # Sanity check
-        #
+        # Sanity check and normalization
         if site.startswith("https://"):
             site = site[8:]
 
@@ -80,13 +81,13 @@ def parse_config(config_file_path):
             if cert_file == "":
                 cert_file = None
             elif not os.path.exists(cert_file):
-                logger.error("Cert file supplied but doesn't exist: %s" % (cert_file))
+                _logger.error(f"Cert file supplied but doesn't exist: {cert_file}")
 
             key_file = config.get(section, "key_file").strip()
             if key_file == "":
                 cert_file = None
             elif not os.path.exists(key_file):
-                logger.error("Key file supplied but doesn't exist: %s" % (key_file))
+                _logger.error(f"Key file supplied but doesn't exist: {key_file}")
 
         if config.has_option(section, "minutes_to_advance"):
             minutes_to_advance = int(config.get(section, "minutes_to_advance"))
@@ -119,7 +120,7 @@ def parse_config(config_file_path):
 
         reports_limit = config.getint(section, 'reports_limit')
 
-        logger.info("Configured Site: %s Path: %s" % (site, output_path))
+        _logger.info("Configured Site: %s Path: %s" % (site, output_path))
 
         sites.append({"site": site,
                       "reset_start_date": reset_start_date,

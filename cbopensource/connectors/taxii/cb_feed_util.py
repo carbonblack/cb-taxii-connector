@@ -1,3 +1,7 @@
+#  coding: utf-8
+#  VMware Carbon Black EDR Taxii Connector © 2013-2020 VMware, Inc. All Rights Reserved.
+################################################################################
+
 import os
 import simplejson as json
 import traceback
@@ -58,8 +62,9 @@ class FeedHelper(object):
     def load_existing_feed_data(self):
         reports = []
         if os.path.exists(self.path):
-            with open(self.path, 'rb') as file_handle:
-                data = json.loads(file_handle.read())
+            with open(self.path, 'r') as file_handle:
+                inp = file_handle.read()
+                data = json.loads(inp)
                 reports = data.get('reports', [])
 
         return reports

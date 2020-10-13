@@ -1,104 +1,144 @@
-from cybox.objects.domain_name_object import DomainName
-from cybox.objects.address_object import Address
-from cybox.objects.file_object import File
+#  coding: utf-8
+#  VMware Carbon Black EDR Taxii Connector © 2013-2020 VMware, Inc. All Rights Reserved.
+################################################################################
 
-import logging
-import string
 import ipaddress
+import logging
+import re
 import uuid
+from typing import Dict, List, Optional
 
-logger = logging.getLogger(__name__)
+from cybox.core.observable import Observable
+from cybox.objects.address_object import Address
+from cybox.objects.domain_name_object import DomainName
+from cybox.objects.file_object import File
+from stix.report import Indicator
 
-#
-# Used by validate_domain_name function
-#
-domain_allowed_chars = string.printable[:-6]
+_logger = logging.getLogger(__name__)
+
+# Used by validate_domain_name function  -- Incorrect! -- BC
+# domain_allowed_chars = string.printable[:-6]
 
 
-def validate_domain_name(domain_name):
+# ----- Validate methods ----------------------------------------------------- #
+
+def validate_domain_name(domain_name: str) -> bool:
     """
-    Validate a domain name to ensure validity and saneness
+    Validate a domain name to ensure validity and saneness.
+
+    NOTE: by the rules in RFC 1035, some of these check are bogus and allow invalid domains!  Needs to be addressed!
+
     :param domain_name: The domain name to check
-    :return: True or False
+    :return: True if valid, otherwise false
     """
-    if len(domain_name) > 255:
-        logger.warn("Excessively long domain name {} in IOC list".format(domain_name))
+    # As per RFC 1035, Domain names--Implementation and specification, P. Mockapetris (Nov 1987)
+    if len(domain_name) > 253:
+        _logger.warning(f"Excessively long domain name `{domain_name}` in IOC list")
         return False
 
-    if not all([c in domain_allowed_chars for c in domain_name]):
-        logger.warn("Malformed domain name {} in IOC list".format(domain_name))
+    # This is not correct! `domain_allowed_chars` includes punctuation characters that are NOT valid domain characters!
+    # if not all([c in domain_allowed_chars for c in domain_name]):
+    #     _logger.warning(f"Malformed domain name `{domain_name}` in IOC list")
+    #     return False
+
+    # Check whether each part of the domain is not longer than 63 characters, and allow internationalized
+    # domain names using the punycode notation:
+    if not re.match(r"\b((?=[a-z0-9-]{1,63}\.)(xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,63}\b", domain_name):
         return False
 
     parts = domain_name.split('.')
     if 0 == len(parts):
-        logger.warn("Empty domain name found in IOC list")
+        _logger.warning("Empty domain name found in IOC list")
         return False
 
     for part in parts:
         if len(part) < 1 or len(part) > 63:
-            logger.warn("Invalid label length {} in domain name {} for report %s".format(part, domain_name))
+            _logger.warning(f"Invalid label length {part} in domain name {domain_name} for report")
             return False
 
     return True
 
 
-def validate_md5sum(md5):
+def validate_md5sum(md5: str) -> bool:
     """
-    Validate md5sum
+    Validate md5sum for saneness.
+
     :param md5: md5sum to valiate
-    :return: True or False
+    :return: True if valid, otherwise false
     """
     if 32 != len(md5):
-        logger.warn("Invalid md5 length for md5 {}".format(md5))
+        _logger.warning(f"Invalid md5 length for md5 `{md5}`")
         return False
+
     if not md5.isalnum():
-        logger.warn("Malformed md5 {} in IOC list".format(md5))
+        _logger.warning(f"Malformed md5 `{md5}` in IOC list")
         return False
+
     for c in "ghijklmnopqrstuvwxyz":
         if c in md5 or c.upper() in md5:
-            logger.warn("Malformed md5 {} in IOC list".format(md5))
+            _logger.warning(f"Malformed md5 {md5} in IOC list")
             return False
 
     return True
 
 
-def validate_sha256(sha256):
+def validate_sha256(sha256: str) -> bool:
     """
-    Validate md5sum
-    :param md5: md5sum to valiate
-    :return: True or False
+    Validate sha256 for saneness.
+
+    :param sha256: sha256 to valiate
+    :return: True if valid, otherwise false
     """
     if 64 != len(sha256):
-        logger.warn("Invalid sha256 length for sha256 {}".format(sha256))
+        _logger.warning(f"Invalid sha256 length for sha256 {sha256}")
         return False
+
     if not sha256.isalnum():
-        logger.warn("Malformed sha256 {} in IOC list".format(sha256))
+        _logger.warning(f"Malformed sha256 {sha256} in IOC list")
         return False
+
     for invalid_hash_character in "ghijklmnopqrstuvwxyz":
         if invalid_hash_character in sha256 or invalid_hash_character.upper() in sha256:
-            logger.warn("Malformed sha256 {} in IOC list".format(sha256))
+            _logger.warning(f"Malformed sha256 {sha256} in IOC list")
             return False
 
     return True
 
 
-def sanitize_id(id):
+def validate_ip_address(ip_string: str) -> bool:
     """
-    Ids may only contain a-z, A-Z, 0-9, - and must have one character
-    :param id: the ID to be sanitized
-    :return: sanitized ID
+    Check a provided IP address for valid formatting.
+
+    :param ip_string: ip to be validated
+    :return: True if valid, False otherwise
     """
-    return id.replace(':', '-')
-
-
-def validate_ip_address(ip_string):
     try:
-        ipaddress.ip_address(unicode(ip_string))
+        ipaddress.ip_address(ip_string)
         return True
     except ValueError:
         return False
 
-def cybox_parse_observable(observable, indicator, timestamp, score):
+
+def sanitize_id(the_id: str) -> str:
+    """
+    Ids may only contain a-z, A-Z, 0-9, - and must have one character.
+
+    :param the_id: the ID to be sanitized
+    :return: sanitized ID
+    """
+    return the_id.replace(':', '-')
+
+
+def cybox_parse_observable(observable: Observable, indicator: Optional[Indicator], timestamp: int, score: int):
+    """
+    Parse cybox observables.
+
+    :param observable: cybox observable
+    :param indicator: stix report indicator (optional)
+    :param timestamp: epoch time in seconds (UTC)
+    :param score: score
+    :return:
+    """
     if observable.observable_composition:
         reports = []
         for composed_observable in observable.observable_composition.observables:
@@ -107,7 +147,8 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
     else:
         return _cybox_parse_observable(observable, indicator, timestamp, score)
 
-def _cybox_parse_observable(observable, indicator, timestamp, score):
+
+def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestamp, score) -> List[Dict]:
     """
     parses a cybox observable and returns a list of iocs.
     :param observable: the cybox obserable to parse
@@ -135,7 +176,6 @@ def _cybox_parse_observable(observable, indicator, timestamp, score):
     if not description and indicator and indicator.description:
         description = str(indicator.description.value)
 
-
     #
     # use the first reference as a link
     # NOTE: This was added for RecordedFuture
@@ -145,7 +185,6 @@ def _cybox_parse_observable(observable, indicator, timestamp, score):
         for reference in indicator.producer.references:
             link = reference
             break
-
 
     #
     # Sometimes the title is None, so generate a random UUID

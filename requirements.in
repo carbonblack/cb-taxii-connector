@@ -4,8 +4,7 @@
 # command line from within the repository root folder.
 ################################################################################
 
-
-git+https://github.com/carbonblack/cbfeeds.git@update_supported_iocs
+git+https://github.com/carbonblack/cbfeeds.git@py3-support
 stix
 cbapi
 cabby
