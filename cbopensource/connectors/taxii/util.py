@@ -32,6 +32,7 @@ class UTC(tzinfo):
 TZ_UTC = UTC()
 
 
+# noinspection PySameParameterValue
 def cleanup_string(filename: str) -> str:
     """
     Cleanup the provided possible unicode string and reduce it to clean-text usable for a filename.
@@ -39,7 +40,7 @@ def cleanup_string(filename: str) -> str:
     :param filename: submitted filename
     :return: cleansed name
     """
-    valid_chars = "%s%s" % (string.ascii_letters, string.digits)
+    valid_chars = f"{string.ascii_letters}{string.digits}"
     newname = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore').decode("utf-8")
     s = ''.join([c for c in newname if c in valid_chars])
     return s.lower()

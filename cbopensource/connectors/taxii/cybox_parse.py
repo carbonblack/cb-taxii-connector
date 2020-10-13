@@ -6,7 +6,7 @@ import ipaddress
 import logging
 import re
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from cybox.core.observable import Observable
 from cybox.objects.address_object import Address
@@ -129,7 +129,8 @@ def sanitize_id(the_id: str) -> str:
     return the_id.replace(':', '-')
 
 
-def cybox_parse_observable(observable: Observable, indicator: Optional[Indicator], timestamp: int, score: int):
+def cybox_parse_observable(observable: Observable, indicator: Optional[Indicator], timestamp: int,
+                           score: int) -> List[Dict[str, Any]]:
     """
     Parse cybox observables.
 
@@ -148,7 +149,7 @@ def cybox_parse_observable(observable: Observable, indicator: Optional[Indicator
         return _cybox_parse_observable(observable, indicator, timestamp, score)
 
 
-def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestamp, score) -> List[Dict]:
+def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestamp, score) -> List[Dict[str, Any]]:
     """
     parses a cybox observable and returns a list of iocs.
     :param observable: the cybox obserable to parse

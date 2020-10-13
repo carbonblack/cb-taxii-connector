@@ -4,16 +4,18 @@
 
 import collections
 import datetime
+import logging
 import os
 import unittest
 
 import dateutil
+import simplejson as json
 from mock import MagicMock, patch
 from stix.core import STIXPackage
 
 from cbopensource.connectors.taxii.bridge import CbTaxiiFeedConverter
-from cbopensource.connectors.taxii.cybox_parse import cybox_parse_observable, validate_domain_name, validate_md5sum, \
-    validate_sha256, validate_ip_address
+from cbopensource.connectors.taxii.cybox_parse import cybox_parse_observable, validate_domain_name, \
+    validate_ip_address, validate_md5sum, validate_sha256
 
 HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 RESOURCE_PATH_PREFIX = os.path.join(HOME, 'cbopensource/test/resources')
@@ -74,7 +76,8 @@ def get_site():
             "collection_management_path": '',
             "poll_path": '',
             "default_score": 25,
-            "reports_limit": 10}
+            "reports_limit": 10
+            }
     return site
 
 
@@ -322,7 +325,7 @@ class TestStringMethods(unittest.TestCase):
         """
         Verify that an ipv6 that is long an entry is rejected.
         """
-        test = "10000:1111:2222:3333:4444:5555:6666:7777" # first entry over FFFF
+        test = "10000:1111:2222:3333:4444:5555:6666:7777"  # first entry over FFFF
         assert not validate_ip_address(test), "high entry ipv6 accepted"
 
     def test_10d_invalid_ipv6_bogus_entry(self):
@@ -365,11 +368,17 @@ class TestStringMethods(unittest.TestCase):
 
     # ----- Connectivity Tests --------------------------------------------------- #
 
+    # noinspection PyUnusedLocal
     @patch("cbopensource.connectors.taxii.bridge.parse_config")
     @patch("cbopensource.connectors.taxii.bridge.CbResponseAPI")
     @patch("cbopensource.connectors.taxii.bridge.create_client")
     @patch("cbopensource.connectors.taxii.bridge._logger.debug")
     def test_30_connector_simple(self, debug_logger_mock, cabby_client_mock, cbr_api_mock, parse_config_mock):
+        if os.path.exists("./sitesomecollections"):
+            os.remove("./sitesomecollections")
+        if os.path.exists("./sitesomecollections.details"):
+            os.remove("./sitesomecollections.details")
+
         debug_logger_mock = MagicMock()
         cbapi_object_mock = MagicMock()
         cbapi_object_mock.info.return_value = True
@@ -387,6 +396,18 @@ class TestStringMethods(unittest.TestCase):
         cbt = CbTaxiiFeedConverter("taxii.conf", True, ".", None)
         cbt.perform()
 
+        # check for feeds
+        assert os.path.exists("./sitesomecollections")
+        with open("./sitesomecollections", 'r') as file_handle:
+            data = json.loads(file_handle.read())
+
+        assert data['feedinfo']['name'] == "sitesomecollections"
+        assert len(data['reports']) == 5
+        assert data['reports'][4]['iocs']['sha256'][0] == 'ecebd25a39aaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+
+_logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
+    _logger.setLevel(logging.DEBUG)
     unittest.main()
