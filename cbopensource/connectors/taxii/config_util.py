@@ -5,27 +5,42 @@
 import logging
 import os
 import sys
-from configparser import ConfigParser
-from typing import Dict, List, Union
+import configparser
+from typing import Dict, List, Union, Tuple
 
 _logger = logging.getLogger(__name__)
 
+__all__ = ["parse_config", "TaxiiConfigurationException"]
 
-def parse_config(config_file_path: str) -> Dict[str, Union[str, List[Dict]]]:
+
+class TaxiiConfigurationException(Exception):
+    """
+    Base class for exceptions thrown due to taxii configuration problems.
+    """
+    pass
+
+
+def parse_config(config_file_path: str) -> Tuple[Dict[str, Union[str, List[Dict]]], List[str]]:
     """
     Read a configuration file into a local dictionary for easier access.
 
     :param config_file_path: path to the config file
-    :return: compiled dictionary
+    :return: Tuple of compiled dictionary and list of found problems
+    :raises TaxiiConfigurationException: if configuration file does not exist (fatal)
     """
+    problems = []
+
     config_defaults = {"server_url": "https://127.0.0.1", "auth_token": None,
                        "http_proxy_url": None, "https_proxy_url": None, f"reports_limit": "10000",
                        "reset_start_date": "False"}
 
-    config = ConfigParser.ConfigParser(defaults=config_defaults)
+    config = configparser.ConfigParser(defaults=config_defaults)
+
+    if config_file_path is None:
+        raise TaxiiConfigurationException("Config File: must be specified")
+
     if not os.path.exists(config_file_path):
-        _logger.error(f"Config File: {config_file_path} does not exist")
-        sys.exit(-1)
+        raise TaxiiConfigurationException(f"Config File: {config_file_path} does not exist")
 
     config.read(config_file_path)
 
@@ -143,6 +158,8 @@ def parse_config(config_file_path: str) -> Dict[str, Union[str, List[Dict]]]:
                       "default_score": default_score,
                       "reports_limit": reports_limit})
 
+        if len(sites) == 0:
+            _logger.warning("No sites specified in configuration -- nothing will be done!")
         return {'server_url': server_url,
                 'api_token': api_token,
                 'sites': sites,

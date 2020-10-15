@@ -4,9 +4,9 @@
 
 import ipaddress
 import logging
-import re
+import string
 import uuid
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from cybox.core.observable import Observable
 from cybox.objects.address_object import Address
@@ -16,8 +16,8 @@ from stix.report import Indicator
 
 _logger = logging.getLogger(__name__)
 
-# Used by validate_domain_name function  -- Incorrect! -- BC
-# domain_allowed_chars = string.printable[:-6]
+# Used by validate_domain_name function
+domain_allowed_chars = string.printable[:-6]
 
 
 # ----- Validate methods ----------------------------------------------------- #
@@ -36,24 +36,21 @@ def validate_domain_name(domain_name: str) -> bool:
         _logger.warning(f"Excessively long domain name `{domain_name}` in IOC list")
         return False
 
-    # This is not correct! `domain_allowed_chars` includes punctuation characters that are NOT valid domain characters!
-    # if not all([c in domain_allowed_chars for c in domain_name]):
-    #     _logger.warning(f"Malformed domain name `{domain_name}` in IOC list")
-    #     return False
-
-    # Check whether each part of the domain is not longer than 63 characters, and allow internationalized
-    # domain names using the punycode notation:
-    if not re.match(r"\b((?=[a-z0-9-]{1,63}\.)(xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,63}\b", domain_name):
+    if not all([c in domain_allowed_chars for c in domain_name]):
+        _logger.warning(f"Malformed domain name `{domain_name}` in IOC list")
         return False
 
     parts = domain_name.split('.')
-    if 0 == len(parts):
+    if len(parts) == 0:
         _logger.warning("Empty domain name found in IOC list")
+        return False
+    if len(parts) == 1:
+        _logger.warning("Domanin names must have at least 1 octet")
         return False
 
     for part in parts:
         if len(part) < 1 or len(part) > 63:
-            _logger.warning(f"Invalid label length {part} in domain name {domain_name} for report")
+            _logger.warning(f"Invalid label length `{part}` in domain name {domain_name} for report")
             return False
 
     return True
@@ -158,7 +155,7 @@ def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestam
     reports = []
 
     if observable.object_ and observable.object_.properties:
-        props = observable.object_.properties
+        the_props = observable.object_.properties
     else:
         return reports
 
@@ -197,8 +194,7 @@ def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestam
         title = str(uuid.uuid4())
 
     def append_report_if_iocs_found(props, target_key, ioc_label, validator):
-        iocs = get_iocs_from_props(
-            props, target_key=target_key, ioc_label=ioc_label, validator=validator)
+        iocs = get_iocs_from_props(props, target_key=target_key, ioc_label=ioc_label, validator=validator)
         if len(iocs) > 0:
             reports.append({'iocs': iocs,
                             'id': sanitize_id(observable.id_),
@@ -208,27 +204,32 @@ def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestam
                             'link': link,
                             'score': score})
 
-    if type(props) == DomainName:
-        if props.value and props.value.value:
+    if type(the_props) == DomainName:
+        if the_props.value and the_props.value.value:
+            _logger.info(f"Found DOMAIN: {the_props.value.value}")
             append_report_if_iocs_found(
-                props.value, target_key="value", ioc_label="dns", validator=validate_domain_name)
+                the_props.value, target_key="value", ioc_label="dns", validator=validate_domain_name)
 
-    elif type(props) == Address:
-        if props.category == 'ipv4-addr' and props.address_value:
+    elif type(the_props) == Address:
+        if the_props.category == 'ipv4-addr' and the_props.address_value:
+            _logger.info(f"Found IPV4: {the_props.address_value}")
             append_report_if_iocs_found(
-                props.address_value, target_key="value", ioc_label="ipv4", validator=validate_ip_address)
+                the_props.address_value, target_key="value", ioc_label="ipv4", validator=validate_ip_address)
 
-        if props.category == 'ipv6-addr' and props.address_value:
+        if the_props.category == 'ipv6-addr' and the_props.address_value:
+            _logger.info(f"Found IPV6: {the_props.address_value}")
             append_report_if_iocs_found(
-                props.address_value, target_key="value", ioc_label="ipv6", validator=validate_ip_address)
+                the_props.address_value, target_key="value", ioc_label="ipv6", validator=validate_ip_address)
 
-    elif type(props) == File:
-        if props.md5:
+    elif type(the_props) == File:
+        if the_props.md5:
+            _logger.info(f"Found MD5: {the_props.md5}")
             append_report_if_iocs_found(
-                props, target_key="md5", ioc_label="md5", validator=validate_md5sum)
-        if props.sha256:
+                the_props, target_key="md5", ioc_label="md5", validator=validate_md5sum)
+        if the_props.sha256:
+            _logger.info(f"Found SHA256: {the_props.sha256}")
             append_report_if_iocs_found(
-                props, target_key="sha256", ioc_label="sha256", validator=validate_sha256)
+                the_props, target_key="sha256", ioc_label="sha256", validator=validate_sha256)
 
     return reports
 

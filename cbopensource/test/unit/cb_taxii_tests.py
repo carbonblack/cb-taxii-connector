@@ -3,6 +3,7 @@
 ################################################################################
 
 import collections
+import configparser
 import datetime
 import logging
 import os
@@ -13,7 +14,8 @@ import simplejson as json
 from mock import MagicMock, patch
 from stix.core import STIXPackage
 
-from cbopensource.connectors.taxii.bridge import CbTaxiiFeedConverter
+from cbopensource.connectors.taxii.bridge import CbTaxiiFeedConverter, dt_to_seconds
+from cbopensource.connectors.taxii.config_util import parse_config, TaxiiConfigurationException
 from cbopensource.connectors.taxii.cybox_parse import cybox_parse_observable, validate_domain_name, \
     validate_ip_address, validate_md5sum, validate_sha256
 
@@ -335,49 +337,147 @@ class TestStringMethods(unittest.TestCase):
         test = "0000:1111:2222:3333:good:5555:6666:7777"
         assert not validate_ip_address(test), "bogus entry ipv6 accepted"
 
+    def test_11a_datetime_convert(self):
+        """
+        Verify that bridge.py's time convert is correct.
+        """
+        test = datetime.datetime.strptime("1999-09-13 12:00:00", "%Y-%m-%d %H:%M:%S")
+        conv = dt_to_seconds(test)
+        assert conv == 937238400
+
+    def test_11b_datetime_convert_none(self):
+        """
+        Verify that bridge.py's time convert returns 0 for non-datetime
+        """
+        # noinspection PyTypeChecker
+        conv = dt_to_seconds(None)
+        assert conv == 0
+
     # ----- Report Handling Tests ------------------------------------------------ #
 
     def test_20_simple_ip_indicator(self):
+        """
+        Verify that we can digest feeds that contain multiple ip entries.
+        """
         reports = run_xml_to_reports('simple_ip_watchlist.xml')
         assert len(reports[0]['iocs']['ipv4']) == 3
 
-    def test_21_simple_ipv6_indicator(self):
+    def test_21_simple_ipv4_indicator(self):
+        """
+        Verify that we can digest ipv4 feeds.
+        """
+        reports = run_xml_to_reports('simple_ipv4.xml')
+        assert len(reports) == 1
+        assert len(reports[0]['iocs']['ipv4']) == 1
+
+    def test_22_simple_ipv6_indicator(self):
+        """
+        Verify that we can digest ipv6 feeds.
+        """
         reports = run_xml_to_reports('simple_ipv6_watchlist.xml')
         assert len(reports[0]['iocs']['ipv6']) == 3
         assert len(reports[1]['iocs']['ipv6']) == 1
 
-    def test_22_hash_watchlist_indicator(self):
+    def test_23_hash_watchlist_indicator(self):
+        """
+        Verify that we can digest md5 and sha256 feeds.
+        """
         reports = run_xml_to_reports('cybox_hash_watchlist.xml')
         assert len(reports) == 5
+        assert "md5" in reports[0]['iocs']
+        assert "md5" in reports[1]['iocs']
+        assert "md5" in reports[2]['iocs']
+        assert "md5" in reports[3]['iocs']
+        assert "sha256" in reports[4]['iocs']
 
-    def test_23_dns_watchlist_indicator(self):
+    def test_24_dns_watchlist_indicator(self):
+        """
+        Verify that we can digest domain feeds.
+        """
         reports = run_xml_to_reports('simple_dns_watchlist.xml')
         assert len(reports) == 2
         assert len(reports[0]['iocs']['dns']) == 3
         assert len(reports[1]['iocs']['dns']) == 1
 
     def test_24_hat_dns_example(self):
+        """
+        Verify that we can digest domain feeds in hail-a-taxii format
+        """
         reports = run_xml_to_reports('hat_dns_example.xml')
         assert len(reports) == 1
         assert len(reports[0]['iocs']['dns']) == 1
 
-    def test_25_simple_ipv4_indicator(self):
-        reports = run_xml_to_reports('simple_ipv4.xml')
-        assert len(reports) == 1
-        assert len(reports[0]['iocs']['ipv4']) == 1
+    # ----- Configuration Tests -------------------------------------------------- #
+
+    _config = "./my_config"
+
+    def _config_cleanup(self):
+        if os.path.exists(self._config):
+            os.remove(self._config)
+
+    def _make_config(self, **kwargs):
+        """
+        Create a config for use in testing
+
+        :param kwargs: entries to add, remove for testing
+        """
+        cp = configparser.ConfigParser()
+
+        # add header defaults
+        data = {
+            'server_url': "https://123.45.6.78",
+            'auth_token': "deadbeef97dabe459da5772969a82b61f47d1913",
+        }
+        cp['cbconfig'] = data
+
+        # add sites
+        cbconfig = cp['cbconfig']
+
+        # save config file
+        with open(self._config, 'w') as fp:
+            cp.write(fp)
+
+    def test_30a_invalid_no_config(self):
+        """
+        Verify that missing config files are detected..
+        """
+        try:
+            # noinspection PyTypeChecker
+            parse_config(None)
+            self.fail("Did not detect missing config file")
+        except TaxiiConfigurationException as tce:
+            assert 'Config File: must be specified' in tce.args[0]
+
+    def test_30b_invalid_config_not_exist(self):
+        """
+        Verify that missing config files are detected..
+        """
+        try:
+            # noinspection PyTypeChecker
+            parse_config("./no-such-config-file")
+            self.fail("Did not detect non-existant config file")
+        except TaxiiConfigurationException as tce:
+            assert 'Config File: ./no-such-config-file does not exis' in tce.args[0]
 
     # ----- Connectivity Tests --------------------------------------------------- #
 
-    # noinspection PyUnusedLocal
-    @patch("cbopensource.connectors.taxii.bridge.parse_config")
-    @patch("cbopensource.connectors.taxii.bridge.CbResponseAPI")
-    @patch("cbopensource.connectors.taxii.bridge.create_client")
-    @patch("cbopensource.connectors.taxii.bridge._logger.debug")
-    def test_30_connector_simple(self, debug_logger_mock, cabby_client_mock, cbr_api_mock, parse_config_mock):
+    @staticmethod
+    def _collection_cleanup():
         if os.path.exists("./sitesomecollections"):
             os.remove("./sitesomecollections")
         if os.path.exists("./sitesomecollections.details"):
             os.remove("./sitesomecollections.details")
+
+    # noinspection PyUnusedLocal,DuplicatedCode
+    @patch("cbopensource.connectors.taxii.bridge.parse_config")
+    @patch("cbopensource.connectors.taxii.bridge.CbResponseAPI")
+    @patch("cbopensource.connectors.taxii.bridge.create_client")
+    @patch("cbopensource.connectors.taxii.bridge._logger.debug")
+    def test_40_connector_simple(self, debug_logger_mock, cabby_client_mock, cbr_api_mock, parse_config_mock):
+        """
+        Make a mock connection attempt.
+        """
+        self._collection_cleanup()
 
         debug_logger_mock = MagicMock()
         cbapi_object_mock = MagicMock()
@@ -394,16 +494,66 @@ class TestStringMethods(unittest.TestCase):
         cabby_client_mock.return_value.poll.side_effect = [[
             get_collection_block_data()], []]
         cbt = CbTaxiiFeedConverter("taxii.conf", True, ".", None)
-        cbt.perform()
 
-        # check for feeds
-        assert os.path.exists("./sitesomecollections")
-        with open("./sitesomecollections", 'r') as file_handle:
-            data = json.loads(file_handle.read())
+        try:
+            cbt.perform()
 
-        assert data['feedinfo']['name'] == "sitesomecollections"
-        assert len(data['reports']) == 5
-        assert data['reports'][4]['iocs']['sha256'][0] == 'ecebd25a39aaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+            # check for feeds
+            assert os.path.exists("./sitesomecollections")
+            with open("./sitesomecollections", 'r') as file_handle:
+                data = json.loads(file_handle.read())
+
+            assert data['feedinfo']['name'] == "sitesomecollections"
+            assert len(data['reports']) == 5
+            assert data['reports'][4]['iocs']['sha256'][
+                       0] == 'ecebd25a39aaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+        finally:
+            self._collection_cleanup()
+
+    # noinspection PyUnusedLocal,DuplicatedCode
+    @patch("cbopensource.connectors.taxii.bridge.parse_config")
+    @patch("cbopensource.connectors.taxii.bridge.CbResponseAPI")
+    @patch("cbopensource.connectors.taxii.bridge.create_client")
+    @patch("cbopensource.connectors.taxii.bridge._logger.debug")
+    def test_41_invalid_connector_simple_no_input(self, debug_logger_mock, cabby_client_mock, cbr_api_mock,
+                                                  parse_config_mock):
+        """
+        Attempt a connection attempt with no input directory; simulates invokation with no `-i` specified
+        (should have no effect since at this time import is unused)
+        """
+        self._collection_cleanup()
+
+        debug_logger_mock = MagicMock()
+        cbapi_object_mock = MagicMock()
+        cbapi_object_mock.info.return_value = True
+        cbr_api_mock.return_value = cbapi_object_mock
+
+        parse_config_mock.return_value = {'server_url': "cbresponseserver",
+                                          'api_token': "apitoken",
+                                          'sites': [get_site()],
+                                          'http_proxy_url': None,
+                                          'https_proxy_url': None}
+        cabby_client_mock.return_value.get_collections.return_value = [
+            Collection(name='somecollection', available=True, type='DATA_FEED')]
+        cabby_client_mock.return_value.poll.side_effect = [[
+            get_collection_block_data()], []]
+        # noinspection PyTypeChecker
+        cbt = CbTaxiiFeedConverter("taxii.conf", True, None, None)
+
+        try:
+            cbt.perform()
+
+            # check for feeds
+            assert os.path.exists("./sitesomecollections")
+            with open("./sitesomecollections", 'r') as file_handle:
+                data = json.loads(file_handle.read())
+
+            assert data['feedinfo']['name'] == "sitesomecollections"
+            assert len(data['reports']) == 5
+            assert data['reports'][4]['iocs']['sha256'][
+                       0] == 'ecebd25a39aaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+        finally:
+            self._collection_cleanup()
 
 
 _logger = logging.getLogger(__name__)

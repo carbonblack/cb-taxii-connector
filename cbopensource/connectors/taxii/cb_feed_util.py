@@ -29,7 +29,7 @@ class FeedHelper(object):
         :param feed_name: the name of the new edr feed
         :param minutes_to_advance: minutes to go forward from the start date
         :param start_date_str: starting date and time
-        :param reset_start_date: if True, update the date time
+        :param reset_start_date: if True, update the stashed start date
         """
         self.output_dir = output_dir
         self.feed_name = feed_name
@@ -55,9 +55,8 @@ class FeedHelper(object):
         """
         Initialize the feed details internal structure with information on disk.
 
-        :param start_date: starting datetime
+        :param start_date: starting date and time as a string
         :param ignore_feed_details: If True, don't load details
-        :return:
         """
         self.feed_details = {"latest": start_date}
         if os.path.exists(self.details_path) and not ignore_feed_details:
@@ -67,9 +66,10 @@ class FeedHelper(object):
             except Exception as e:
                 _logger.warning(f"{e}")
 
-    def advance(self):
+    def advance(self) -> bool:
         """
-        Returns True if keep going, False if we already hit the end time and cannot advance.
+        Returns True if we need to advance to the next time interval.  If the time interval exceeds
+        the current time, we will advance but set our flag to stop after that.
 
         :return: True or False
         """
@@ -151,15 +151,25 @@ def build_feed_data(feed_name: str, display_name: str, feed_summary: str, site: 
     """
     Return a feed definition as a JSON string definition.
 
+    :param feed_name: the short name of the feed
+    :param display_name: the display name of the feed
+    :param feed_summary: the feed summary
+    :param site: the site name
+    :param icon_link: path to the icon source
+    :param reports:  List of gathered reports
     :return: feed as JSON string
     """
+
     feedinfo = {'name': feed_name,
                 'display_name': display_name,
                 'provider_url': 'http://' + site,
                 'summary': feed_summary,
                 'tech_data': "There are no requirements to share any data to receive this feed.",
-                'icon': icon_link
                 }
+
+    # handle optionals
+    if icon_link:
+        feedinfo['icon'] = icon_link
 
     feedinfo = CbFeedInfo(**feedinfo)
 

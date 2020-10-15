@@ -23,6 +23,7 @@ For each TAXII service, available “collections” are enumerated and a Cb Resp
 The following IOC types are extracted from STIX data:
 
 * MD5 Hashes
+* SHA-256 Hashes
 * Domain Names
 * IP-Addresses
 * IP-Address Ranges

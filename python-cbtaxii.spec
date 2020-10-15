@@ -1,6 +1,6 @@
 %define name python-cbtaxii
-%define version 1.6.8
-%define unmangled_version 1.6.8
+%define version 2.0.0
+%define unmangled_version 2.0.0
 %define release 1
 %global _enable_debug_package 0
 %global debug_package %{nil}

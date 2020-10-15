@@ -6,36 +6,35 @@ import sys
 
 from cbopensource.connectors.taxii.bridge import runner
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(message)s')
 logger = logging.getLogger(__name__)
 
 
 def build_cli_parser():
-    parser = argparse.ArgumentParser()
+    the_parser = argparse.ArgumentParser()
 
     #
     # for each supported output type, add an option
     #
-    parser.add_argument("-c", "--config",
-                        action="store",
-                        dest="config_path",
-                        help="CBTaxii config file")
+    the_parser.add_argument("-c", "--config",
+                            action="store",
+                            dest="config_path",
+                            help="CBTaxii config file")
 
-    parser.add_argument("-e", "--export-dir",
-                        action="store",
-                        dest="export_dir",
-                        help="Export mode")
+    the_parser.add_argument("-e", "--export-dir",
+                            action="store",
+                            dest="export_dir",
+                            help="Export mode")
 
-    parser.add_argument("-i", "--import-dir",
-                        action="store",
-                        dest="import_dir",
-                        help="Parse XML from files")
+    the_parser.add_argument("-i", "--import-dir",
+                            action="store",
+                            dest="import_dir",
+                            help="Parse XML from files")
 
-    parser.add_argument("-d", "--debug",
-                        action="store_true",
-                        help="Enter debug mode")
+    the_parser.add_argument("-d", "--debug",
+                            action="store_true",
+                            help="Enter debug mode")
 
-    return parser
+    return the_parser
 
 
 if __name__ == "__main__":
@@ -44,7 +43,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s %(message)s')
+    else:
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(message)s')
 
     if not args.config_path:
         logger.error("Missing config file path")

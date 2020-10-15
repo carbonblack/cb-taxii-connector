@@ -7,10 +7,8 @@ import logging
 import os
 import sys
 import tempfile
-import time
 from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union
 
-import dateutil
 import dateutil.tz
 from cabby import Client10, Client11, create_client
 from cabby.constants import (CB_CAP_11, CB_SMIME, CB_STIX_XML_10, CB_STIX_XML_101, CB_STIX_XML_11, CB_STIX_XML_111,
@@ -22,11 +20,12 @@ from cbapi.response import CbResponseAPI, Feed
 from lxml import etree
 from stix.core import STIXPackage
 
+# core packages
 from .cb_feed_util import build_feed_data, FeedHelper
-from .config_util import parse_config
+from .config_util import parse_config, TaxiiConfigurationException
 from .cybox_parse import cybox_parse_observable
 from .singleton import SingleInstance, SingleInstanceException
-from .util import cleanup_string
+from .util import cleanup_string, dt_to_seconds
 
 CB_STIX_XML_12 = 'urn:stix.mitre.org:xml:1.2'
 
@@ -34,21 +33,9 @@ BINDING_CHOICES = [CB_STIX_XML_111, CB_CAP_11, CB_SMIME, CB_STIX_XML_12,
                    CB_STIX_XML_10, CB_STIX_XML_101, CB_STIX_XML_11,
                    CB_XENC_122002]
 
+EPOCH = datetime.datetime(1970, 1, 1).replace(tzinfo=dateutil.tz.tzutc())
+
 _logger = logging.getLogger(__name__)
-
-
-def total_seconds(td: datetime) -> int:
-    """
-    Simple method to return integer time in seconds from a supplied datetime.
-
-    :param td: datetime object to be converted
-    :return: epoch time in seconds
-    """
-    try:
-        return int(time.mktime(td.timetuple()))
-    except Exception as err:
-        _logger.debug(f"Supplied `td` could not be converted: {err}")
-        return 0
 
 
 class CbTaxiiFeedConverter(object):
@@ -61,12 +48,19 @@ class CbTaxiiFeedConverter(object):
         """
         Parse config file and save off the information we need.
 
+        NOTE: At present, import path is unused
+
         :param config_file_path: configuration file location
         :param debug_mode: If True, operate in debug mode
         :param import_dir: feed import directory
         :param export_dir: export directory (optional)
         """
-        config_dict = parse_config(config_file_path)
+        try:
+            config_dict, problems = parse_config(config_file_path)
+        except TaxiiConfigurationException as err:
+            _logger.error(f"Failed to make connection: {err}", exc_info=False)
+            sys.exit(-1)
+
         if debug_mode:
             _logger.debug(f"Config: {config_dict}")
 
@@ -116,6 +110,10 @@ class CbTaxiiFeedConverter(object):
         :return: List of filenames
         """
         the_list = []
+        if self.import_dir is None:  # possible if input dir is not specified
+            _logger.warning("Input directory was not specified -- skipping xml read")
+            return the_list
+
         for (dirpath, dirnames, filenames) in os.walk(self.import_dir):
             the_list.extend(filenames)
             break
@@ -163,7 +161,9 @@ class CbTaxiiFeedConverter(object):
         available = collection.available
         collection_type = collection.type
         default_score = site.get('default_score')
-        _logger.info(f"{site.get('site')},{collection_name},{sanitized_feed_name},{available},{collection_type}")
+        _logger.info(f"Working on SITE {site.get('site')}, NAME {collection_name}, FEED {sanitized_feed_name}, "
+                     f"AVAIL {available}, TYPE {collection_type}")
+        _logger.info('-'*80)
 
         # if not available, nothing else to do
         if not available:
@@ -180,7 +180,6 @@ class CbTaxiiFeedConverter(object):
 
         if not data_set:
             _logger.info("Feed start time %s" % feed_helper.start_date)
-        _logger.info(f"polling Collection: {collection}...")
 
         #
         # Build up the URI for polling
@@ -205,7 +204,7 @@ class CbTaxiiFeedConverter(object):
             num_times_empty_content_blocks = 0
             try:
                 try:
-                    _logger.info(f"Polling Collection: {collection}")
+                    _logger.info(f"Polling Collection: {collection.name} ...")
                     content_blocks = client.poll(collection_name=collection.name, begin_date=feed_helper.start_date,
                                                  end_date=feed_helper.end_date, content_bindings=BINDING_CHOICES,
                                                  uri=uri)
@@ -219,7 +218,7 @@ class CbTaxiiFeedConverter(object):
                 num_blocks = 0
 
                 if not data_set:
-                    _logger.info(f"polling start_date: {feed_helper.start_date}, end_date: {feed_helper.end_date}")
+                    _logger.info(f" ... start_date: {feed_helper.start_date}, end_date: {feed_helper.end_date}")
                 for block in content_blocks:
                     _logger.debug(block.content)
 
@@ -278,7 +277,7 @@ class CbTaxiiFeedConverter(object):
                         #
                         # Get the timestamp of the STIX Package so we can use this in our feed
                         #
-                        timestamp = total_seconds(stix_package.timestamp)
+                        timestamp = dt_to_seconds(stix_package.timestamp)
 
                         # check for empty content in this block; we break out after 10 empty blocks
                         if not stix_package.indicators and not stix_package.observables:
@@ -314,9 +313,7 @@ class CbTaxiiFeedConverter(object):
                                 if not indicator.timestamp:
                                     timestamp = 0
                                 else:
-                                    timestamp = int((indicator.timestamp -
-                                                     datetime.datetime(1970, 1, 1).replace(
-                                                         tzinfo=dateutil.tz.tzutc())).total_seconds())
+                                    timestamp = int((indicator.timestamp - EPOCH).total_seconds())
 
                                 # Cybox observable returns a list
                                 reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp,
@@ -375,12 +372,21 @@ class CbTaxiiFeedConverter(object):
             _logger.info("Truncating reports to length {0}".format(site.get('reports_limit')))
             reports = reports[:site.get('reports_limit')]
 
-        data = build_feed_data(sanitized_feed_name,
-                               "%s %s" % (site.get('site'), collection_name),
-                               feed_summary,
-                               site.get('site'),
-                               site.get('icon_link'),
-                               reports)
+        try:
+            use_icon = site.get('icon_link')
+            if not os.path.exists(use_icon):
+                _logger.warning(f"Unable to find feed icon at path {use_icon}")
+                use_icon = None
+
+            data = build_feed_data(sanitized_feed_name,
+                                   feed_summary,
+                                   feed_summary,
+                                   site.get('site'),
+                                   use_icon,
+                                   reports)
+        except Exception as err:
+            _logger.warning(f"Failed to create feed data for {sanitized_feed_name}: {err}")
+            return -1
 
         if feed_helper.write_feed(data):
             feed_helper.save_details()
@@ -395,21 +401,21 @@ class CbTaxiiFeedConverter(object):
             feeds = get_object_by_name_or_id(self.cb, Feed, name=sanitized_feed_name)
 
             if not feeds:
-                _logger.info("Feed {} was not found, so we are going to create it".format(sanitized_feed_name))
+                _logger.info(f"Feed {sanitized_feed_name} was not found, so we are going to create it")
 
             elif len(feeds) > 1:
-                _logger.warning("Multiple feeds found, selecting Feed id {}".format(feeds[0].id))
+                _logger.warning(f"Multiple feeds found, selecting Feed id {feeds[0].id}")
                 feed_id = feeds[0].id
 
             elif feeds:
                 feed_id = feeds[0].id
-                _logger.info("Feed {} was found as Feed ID {}".format(sanitized_feed_name, feed_id))
+                _logger.info(f"Feed `{sanitized_feed_name}` was found as Feed ID {feed_id}")
 
         except Exception as e:
             _logger.info(f"{e}")
 
         if not feed_id:
-            _logger.info("Creating {} feed for the first time".format(sanitized_feed_name))
+            _logger.info(f"Creating {sanitized_feed_name} feed for the first time")
 
             f = self.cb.create(Feed)
             f.feed_url = "file://" + feed_helper.path
@@ -426,12 +432,12 @@ class CbTaxiiFeedConverter(object):
                     _logger.info("   Check to ensure the Cb server has network connectivity "
                                  "and the credentials are correct.")
                 else:
-                    _logger.info("Could not add feed: {0:s}".format(str(se)))
+                    _logger.info(f"Could not add feed: {se}")
             except Exception as e:
-                _logger.info("Could not add feed: {0:s}".format(str(e)))
+                _logger.info(f"Could not add feed: {e}")
             else:
-                _logger.info("Feed data: {0:s}".format(str(f)))
-                _logger.info("Added feed. New feed ID is {0}".format(f.id))
+                _logger.info(f"Feed data: {f}")
+                _logger.info(f"Added feed. New feed ID is {f.id0}")
                 feed_id = f.id
 
         return feed_id
@@ -491,12 +497,14 @@ class CbTaxiiFeedConverter(object):
 
                 collections: List[CabbyCollection] = client.get_collections(uri=uri)
 
-            for collection in collections:
-                _logger.info(f'Collection Name: {collection.name}, Collection Type: {collection.type}')
-
             if len(collections) == 0:
                 _logger.info('Unable to find any collections.  Exiting...')
                 sys.exit(0)
+
+            _logger.info("=" * 80)
+            for collection in collections:
+                _logger.info(f'Collection Name: {collection.name}, Collection Type: {collection.type}')
+            _logger.info("=" * 80 + "\n")
 
             desired_collections = [x.strip() for x in site.get('collections').lower().split(',')]
 
@@ -517,11 +525,23 @@ class CbTaxiiFeedConverter(object):
                     self._import_collection(client, site, collection, data_set)
 
 
-def runner(configpath: str, debug_mode: bool, import_dir: str, export_dir: str):
+################################################################################
+# Local utilities
+################################################################################
+
+
+def runner(configpath: str, debug_mode: bool, import_dir: str, export_dir: Optional[str]) -> bool:
+    """
+    Function to perform the single taxii service.
+
+    :param configpath: path to the taxii config file
+    :param debug_mode: If True, execute in debug mode
+    :param import_dir: path to the import dir
+    :param export_dir: path to the export dir (optional)
+    :return: True if executed without problems
+    """
     try:
-        #
         # Setting nice inside script so we don't get killed by OOM
-        #
         os.nice(1)
 
         #

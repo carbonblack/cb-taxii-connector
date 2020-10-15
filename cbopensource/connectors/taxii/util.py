@@ -2,19 +2,21 @@
 #  VMware Carbon Black EDR Taxii Connector © 2013-2020 VMware, Inc. All Rights Reserved.
 ################################################################################
 
+import datetime
 import logging
 import string
 import sys
 import time
 import unicodedata
-from datetime import timedelta, tzinfo
 from logging.handlers import RotatingFileHandler
 from typing import Union
 
-ZERO = timedelta(0)
+ZERO = datetime.timedelta(0)
+
+__all__ = ["UTC", "cleanup_string", "dt_to_seconds", "create_stdout_log", "create_rotating_log", "TZ_UTC"]
 
 
-class UTC(tzinfo):
+class UTC(datetime.tzinfo):
     """
     Conversion class for UTC handling.
     """
@@ -46,8 +48,19 @@ def cleanup_string(filename: str) -> str:
     return s.lower()
 
 
-# NOTE: currently unused; retain for later needs
-# noinspection PyUnusedFunction
+def dt_to_seconds(dt: datetime.datetime) -> int:
+    """
+    Simple method to convert a datetime object into epoch seconds.
+
+    :param dt: datetime object to be converted
+    :return: epoch time in seconds, or 0 if the value can not be converted
+    """
+    if not isinstance(dt, datetime.datetime):
+        return 0
+    else:
+        return int(time.mktime(dt.timetuple()))
+
+
 def create_stdout_log(name: str, level: Union[int, str]) -> logging.Logger:
     """
     Creates logging stream to stdout.
@@ -68,8 +81,6 @@ def create_stdout_log(name: str, level: Union[int, str]) -> logging.Logger:
     return logger
 
 
-# NOTE: currently unused; retain for later needs
-# noinspection PyUnusedFunction
 def create_rotating_log(name: str, path: str, level: Union[int, str], num_bytes: int,
                         backup_count: int) -> logging.Logger:
     """
