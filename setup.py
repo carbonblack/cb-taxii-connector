@@ -163,9 +163,7 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
     ],
     keywords='vmware carbonblack bit9',
     cmdclass={'install_cb': install_cb, 'bdist_binaryrpm': bdist_binaryrpm}
