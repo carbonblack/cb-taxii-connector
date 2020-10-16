@@ -35,7 +35,7 @@ a = Analysis(['scripts/cb-taxii-connector'],
                             'cybox.objects.win_service_object', 'cybox.objects.win_system_object', 'cybox.objects.win_system_restore_object',
                             'cybox.objects.win_task_object', 'cybox.objects.win_thread_object', 'cybox.objects.win_user_object',
                             'cybox.objects.win_volume_object', 'cybox.objects.win_waitable_timer_object', 'cybox.objects.x509_certificate_object',
-                            'cbopensource.connectors.taxii.bridge'],
+                            'cbopensource.connectors.taxii.bridge', 'pkg_resources.py2_warn'],
              datas=datas,
              hookspath=None,
              runtime_hooks=None)
