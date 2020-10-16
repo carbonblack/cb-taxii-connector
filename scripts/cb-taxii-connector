@@ -34,6 +34,10 @@ def build_cli_parser():
                             action="store_true",
                             help="Enter debug mode")
 
+    the_parser.add_argument("-s", "--strict",
+                            action="store_true",
+                            help="Strict validation mode")
+
     return the_parser
 
 
@@ -52,4 +56,4 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(-1)
 
-    runner(args.config_path, args.debug, args.import_dir, args.export_dir)
+    runner(args.config_path, args.debug, args.import_dir, args.export_dir, args.strict)

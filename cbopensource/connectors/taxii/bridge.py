@@ -44,7 +44,7 @@ class CbTaxiiFeedConverter(object):
     """
 
     def __init__(self, config_file_path: str, debug_mode: bool = False, import_dir: str = '',
-                 export_dir: Optional[str] = None):
+                 export_dir: Optional[str] = None, strict_mode: bool = False):
         """
         Parse config file and save off the information we need.
 
@@ -54,11 +54,12 @@ class CbTaxiiFeedConverter(object):
         :param debug_mode: If True, operate in debug mode
         :param import_dir: feed import directory
         :param export_dir: export directory (optional)
+        :param strict_mode: It True, be harsher wit config
         """
         try:
-            config_dict, problems = parse_config(config_file_path)
+            config_dict = parse_config(config_file_path, strict_mode=strict_mode)
         except TaxiiConfigurationException as err:
-            _logger.error(f"Failed to make connection: {err}", exc_info=False)
+            _logger.error(f"{err}", exc_info=False)
             sys.exit(-1)
 
         if debug_mode:
@@ -530,7 +531,8 @@ class CbTaxiiFeedConverter(object):
 ################################################################################
 
 
-def runner(configpath: str, debug_mode: bool, import_dir: str, export_dir: Optional[str]) -> bool:
+def runner(configpath: str, debug_mode: bool, import_dir: str, export_dir: Optional[str],
+           strict_mode: bool = False) -> bool:
     """
     Function to perform the single taxii service.
 
@@ -538,6 +540,7 @@ def runner(configpath: str, debug_mode: bool, import_dir: str, export_dir: Optio
     :param debug_mode: If True, execute in debug mode
     :param import_dir: path to the import dir
     :param export_dir: path to the export dir (optional)
+    :param strict_mode: If True, be harsher with configuration checking
     :return: True if executed without problems
     """
     try:
@@ -549,7 +552,7 @@ def runner(configpath: str, debug_mode: bool, import_dir: str, export_dir: Optio
         #
         # noinspection PyUnusedLocal
         me = SingleInstance()
-        cbt = CbTaxiiFeedConverter(configpath, debug_mode, import_dir, export_dir)
+        cbt = CbTaxiiFeedConverter(configpath, debug_mode, import_dir, export_dir, strict_mode)
         cbt.perform()
     except SingleInstanceException as e:
         _logger.error(f"Cannot run multiple copies of this script: {e}")
