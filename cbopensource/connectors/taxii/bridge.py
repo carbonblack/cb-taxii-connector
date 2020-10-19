@@ -434,9 +434,11 @@ class CbTaxiiFeedConverter(object):
                                     "and the credentials are correct.")
                     _logger.warning("!" * 80 + "\n")
                 else:
-                    _logger.info(f"Could not add feed: {se}")
+                    info = feed_helper.dump_feedinfo()
+                    _logger.info(f" ... Could not add feed: {se}\n >> {info}")
             except Exception as e:
-                _logger.warning(f" ... Could not add feed: {e}")
+                info = feed_helper.dump_feedinfo()
+                _logger.warning(f" ... Could not add feed: {e}\n >> {info}")
                 _logger.warning("!" * 80 + "\n")
             else:
                 _logger.info(f"Feed data: {f}")

@@ -128,6 +128,20 @@ class FeedHelper(object):
             _logger.error(f"{e}")
             return False
 
+    def dump_feedinfo(self) -> Dict[str, Any]:
+        """
+        Read in existing feed for display.
+
+        :return: list of reports
+        """
+        if os.path.exists(self.path):
+            with open(self.path, 'r') as file_handle:
+                inp = file_handle.read()
+                data = json.loads(inp)
+                info = data.get('feedinfo', {})
+
+        return info
+
 
 def remove_duplicate_reports(reports: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
