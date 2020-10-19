@@ -157,8 +157,9 @@ class CbTaxiiFeedConverter(object):
         global BINDING_CHOICES
 
         collection_name = collection.name
-        sanitized_feed_name = cleanup_string(f"{site.get('site')}{collection_name}")
-        feed_summary = f"{site.get('site')} {collection_name}"
+        display_name = f"{site.get('site')} {collection_name}"
+        sanitized_feed_name = cleanup_string(site.get('site') + {collection_name})
+        feed_summary = display_name
         available = collection.available
         collection_type = collection.type
         default_score = site.get('default_score')
@@ -378,9 +379,9 @@ class CbTaxiiFeedConverter(object):
             if not os.path.exists(use_icon):
                 _logger.warning(f"Unable to find feed icon at path {use_icon}")
                 use_icon = None
-
+            display = f"{site.get('site')} {collection_name}"
             data = build_feed_data(sanitized_feed_name,
-                                   f"{site.get('site')} {collection_name}",
+                                   display_name,
                                    feed_summary,
                                    site.get('site'),
                                    use_icon,
