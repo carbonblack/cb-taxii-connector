@@ -157,7 +157,7 @@ class CbTaxiiFeedConverter(object):
         global BINDING_CHOICES
 
         collection_name = collection.name
-        sanitized_feed_name = cleanup_string(f"{site.get('site')}{collection_name}%s")
+        sanitized_feed_name = cleanup_string(f"{site.get('site')}{collection_name}")
         feed_summary = f"{site.get('site')} {collection_name}"
         available = collection.available
         collection_type = collection.type

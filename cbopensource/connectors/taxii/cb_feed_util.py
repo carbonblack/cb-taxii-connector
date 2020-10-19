@@ -139,8 +139,11 @@ class FeedHelper(object):
                 inp = file_handle.read()
                 data = json.loads(inp)
                 info = data.get('feedinfo', {})
-
-        return info
+                if 'icon' in info:
+                    info['icon'] = "<icon>"  # clear large icon info
+            return info
+        else:
+            return {}
 
 
 def remove_duplicate_reports(reports: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
