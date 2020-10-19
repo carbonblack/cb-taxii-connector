@@ -1,14 +1,12 @@
-from distutils.core import setup
-from distutils.core import Command
+import os
 from distutils.command.bdist_rpm import bdist_rpm
-
+from distutils.core import Command, setup
 from distutils.file_util import write_file
 from distutils.util import change_root, convert_path
-
-import os
 from subprocess import call
 
 
+# noinspection PyUnusedName
 class bdist_binaryrpm(bdist_rpm):
     description = "create a Cb Open Source Binary RPM distribution"
 
@@ -32,6 +30,8 @@ class bdist_binaryrpm(bdist_rpm):
 """This install_cb plugin will install all data files associated with the
 tool as well as the pyinstaller-compiled single binary scripts so that
 they can be packaged together in a binary RPM."""
+
+
 class install_cb(Command):
     description = "install binary distribution files"
 
@@ -44,7 +44,7 @@ class install_cb(Command):
         ('force', 'f', "force installation (overwrite existing files)"),
         ('record=', None,
          "filename in which to record list of installed files"),
-        ]
+    ]
 
     boolean_options = ['force']
 
@@ -62,7 +62,7 @@ class install_cb(Command):
                                    ('install_data', 'install_dir'),
                                    ('root', 'root'),
                                    ('force', 'force'),
-                                  )
+                                   )
 
     def run(self):
         for f in self.data_files:
@@ -103,7 +103,7 @@ class install_cb(Command):
 
         if self.record:
             outputs = self.get_outputs()
-            if self.root:               # strip any package prefix
+            if self.root:  # strip any package prefix
                 root_len = len(self.root)
                 for counter in range(len(outputs)):
                     outputs[counter] = outputs[counter][root_len:]
@@ -119,6 +119,7 @@ class install_cb(Command):
         return self.outfiles
 
 
+# noinspection PySameParameterValue
 def get_data_files(rootdir):
     # automatically build list of (dir, [file1, file2, ...],)
     # for all files under src/root/ (or provided rootdir)
@@ -130,6 +131,7 @@ def get_data_files(rootdir):
             results.append(("/%s" % dirname, flist))
 
     return results
+
 
 data_files = get_data_files("root")
 data_files.append('cb-taxii-connector.spec')
@@ -150,7 +152,7 @@ setup(
     author='Carbon Black Developer Network',
     author_email='dev-support@carbonblack.com',
     description=
-        'Connector between VMware Carbon Black EDR and TAXII',
+    'Connector between VMware Carbon Black EDR and TAXII',
     data_files=data_files,
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -159,7 +161,7 @@ setup(
         'Intended Audience :: Developers',
 
         # Pick your license as you wish (should match "license" above)
-         'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: MIT License',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.

@@ -164,7 +164,7 @@ class CbTaxiiFeedConverter(object):
         default_score = site.get('default_score')
         _logger.info(f"Working on SITE {site.get('site')}, NAME {collection_name}, FEED {sanitized_feed_name}, "
                      f"AVAIL {available}, TYPE {collection_type}")
-        _logger.info('-'*80)
+        _logger.info('-' * 80)
 
         # if not available, nothing else to do
         if not available:
@@ -402,7 +402,7 @@ class CbTaxiiFeedConverter(object):
             feeds = get_object_by_name_or_id(self.cb, Feed, name=sanitized_feed_name)
 
             if not feeds:
-                _logger.info(f"Feed {sanitized_feed_name} was not found, so we are going to create it")
+                _logger.info(f"Feed {sanitized_feed_name} was not found, so we are going to create it...")
 
             elif len(feeds) > 1:
                 _logger.warning(f"Multiple feeds found, selecting Feed id {feeds[0].id}")
@@ -416,7 +416,7 @@ class CbTaxiiFeedConverter(object):
             _logger.info(f"{e}")
 
         if not feed_id:
-            _logger.info(f"Creating {sanitized_feed_name} feed for the first time")
+            _logger.info(f" ... creating {sanitized_feed_name} feed for the first time")
 
             f = self.cb.create(Feed)
             f.feed_url = "file://" + feed_helper.path
@@ -427,18 +427,20 @@ class CbTaxiiFeedConverter(object):
                 f.save()
             except ServerError as se:
                 if se.error_code == 500:
-                    _logger.info("Could not add feed:")
-                    _logger.info("   Received error code 500 from server. This is usually because "
-                                 "the server cannot retrieve the feed.")
-                    _logger.info("   Check to ensure the Cb server has network connectivity "
-                                 "and the credentials are correct.")
+                    _logger.warning(" ... could not add feed:")
+                    _logger.warning("   Received error code 500 from server. This is usually because "
+                                    "the server cannot retrieve the feed.")
+                    _logger.warning("   Check to ensure the Cb server has network connectivity "
+                                    "and the credentials are correct.")
+                    _logger.warning("!" * 80 + "\n")
                 else:
                     _logger.info(f"Could not add feed: {se}")
             except Exception as e:
-                _logger.info(f"Could not add feed: {e}")
+                _logger.warning(f" ... Could not add feed: {e}")
+                _logger.warning("!" * 80 + "\n")
             else:
                 _logger.info(f"Feed data: {f}")
-                _logger.info(f"Added feed. New feed ID is {f.id0}")
+                _logger.info(f"Added feed. New feed ID is {f.id}")
                 feed_id = f.id
 
         return feed_id

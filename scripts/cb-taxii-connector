@@ -20,6 +20,10 @@ def build_cli_parser():
                             dest="config_path",
                             help="CBTaxii config file")
 
+    the_parser.add_argument("-d", "--debug",
+                            action="store_true",
+                            help="Enter debug mode")
+
     the_parser.add_argument("-e", "--export-dir",
                             action="store",
                             dest="export_dir",
@@ -29,10 +33,6 @@ def build_cli_parser():
                             action="store",
                             dest="import_dir",
                             help="Parse XML from files")
-
-    the_parser.add_argument("-d", "--debug",
-                            action="store_true",
-                            help="Enter debug mode")
 
     the_parser.add_argument("-s", "--strict",
                             action="store_true",

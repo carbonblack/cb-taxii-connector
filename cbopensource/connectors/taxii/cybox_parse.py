@@ -6,8 +6,9 @@ import ipaddress
 import logging
 import string
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
+from cybox.common import ObjectProperties
 from cybox.core.observable import Observable
 from cybox.objects.address_object import Address
 from cybox.objects.domain_name_object import DomainName
@@ -146,7 +147,8 @@ def cybox_parse_observable(observable: Observable, indicator: Optional[Indicator
         return _cybox_parse_observable(observable, indicator, timestamp, score)
 
 
-def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestamp, score) -> List[Dict[str, Any]]:
+def _cybox_parse_observable(observable: Observable, indicator: Optional[Indicator],
+                            timestamp: int, score: int) -> List[Dict[str, Any]]:
     """
     parses a cybox observable and returns a list of iocs.
     :param observable: the cybox obserable to parse
@@ -193,7 +195,16 @@ def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestam
     else:
         title = str(uuid.uuid4())
 
-    def append_report_if_iocs_found(props, target_key, ioc_label, validator):
+    def append_report_if_iocs_found(props: ObjectProperties, target_key: str, ioc_label: str,
+                                    validator: Callable) -> None:
+        """
+        Create a ioc entry.
+
+        :param props: the property of interest
+        :param target_key: the property target
+        :param ioc_label: the ioc label
+        :param validator: property value validation function
+        """
         iocs = get_iocs_from_props(props, target_key=target_key, ioc_label=ioc_label, validator=validator)
         if len(iocs) > 0:
             reports.append({'iocs': iocs,
@@ -206,35 +217,43 @@ def _cybox_parse_observable(observable, indicator: Optional[Indicator], timestam
 
     if type(the_props) == DomainName:
         if the_props.value and the_props.value.value:
-            _logger.info(f"Found DOMAIN: {the_props.value.value}")
-            append_report_if_iocs_found(
-                the_props.value, target_key="value", ioc_label="dns", validator=validate_domain_name)
+            _logger.debug(f"Found DOMAIN: {the_props.value.value}")
+            append_report_if_iocs_found(the_props.value, target_key="value", ioc_label="dns",
+                                        validator=validate_domain_name)
 
     elif type(the_props) == Address:
         if the_props.category == 'ipv4-addr' and the_props.address_value:
-            _logger.info(f"Found IPV4: {the_props.address_value}")
-            append_report_if_iocs_found(
-                the_props.address_value, target_key="value", ioc_label="ipv4", validator=validate_ip_address)
+            _logger.debug(f"Found IPV4: {the_props.address_value}")
+            append_report_if_iocs_found(the_props.address_value, target_key="value", ioc_label="ipv4",
+                                        validator=validate_ip_address)
 
         if the_props.category == 'ipv6-addr' and the_props.address_value:
-            _logger.info(f"Found IPV6: {the_props.address_value}")
-            append_report_if_iocs_found(
-                the_props.address_value, target_key="value", ioc_label="ipv6", validator=validate_ip_address)
+            _logger.debug(f"Found IPV6: {the_props.address_value}")
+            append_report_if_iocs_found(the_props.address_value, target_key="value", ioc_label="ipv6",
+                                        validator=validate_ip_address)
 
     elif type(the_props) == File:
         if the_props.md5:
-            _logger.info(f"Found MD5: {the_props.md5}")
-            append_report_if_iocs_found(
-                the_props, target_key="md5", ioc_label="md5", validator=validate_md5sum)
+            _logger.debug(f"Found MD5: {the_props.md5}")
+            append_report_if_iocs_found(the_props, target_key="md5", ioc_label="md5", validator=validate_md5sum)
         if the_props.sha256:
-            _logger.info(f"Found SHA256: {the_props.sha256}")
-            append_report_if_iocs_found(
-                the_props, target_key="sha256", ioc_label="sha256", validator=validate_sha256)
+            _logger.debug(f"Found SHA256: {the_props.sha256}")
+            append_report_if_iocs_found(the_props, target_key="sha256", ioc_label="sha256", validator=validate_sha256)
 
     return reports
 
 
-def get_iocs_from_props(props, target_key="sha256", ioc_label="sha256", validator=validate_sha256):
+def get_iocs_from_props(props: ObjectProperties, target_key: str = "sha256", ioc_label: str = "sha256",
+                        validator: Callable = validate_sha256) -> Dict[str, List[str]]:
+    """
+    Get the IOC entry from STIX properties.
+
+    :param props: the property of interest
+    :param target_key: the property target
+    :param ioc_label: the ioc label
+    :param validator: property value validation function
+    :return: Dictionary of ioc lists
+    """
     iocs = {ioc_label: []}
     target_prop = getattr(props, target_key)
     if type(target_prop) is list:

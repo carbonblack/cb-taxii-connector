@@ -110,6 +110,7 @@ def f(name):
 class TestSingleton(unittest.TestCase):
 
     def test_1(self):
+        # noinspection PyUnusedLocal
         me = SingleInstance(flavor_id="test-1")
         del me  # now the lock should be removed
         assert True

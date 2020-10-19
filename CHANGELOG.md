@@ -4,6 +4,7 @@ CHANGELOG.md
 ## v2.0.0
 #### Features
  * Converted to python3
+ * Hardened configuration to include sanity checks in order to catch configuration problems BEFORE scanning
 
 ## v1.6.7
 #### Features
