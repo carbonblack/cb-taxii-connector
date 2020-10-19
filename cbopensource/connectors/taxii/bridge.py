@@ -158,7 +158,7 @@ class CbTaxiiFeedConverter(object):
 
         collection_name = collection.name
         display_name = f"{site.get('site')} {collection_name}"
-        sanitized_feed_name = cleanup_string(site.get('site') + {collection_name})
+        sanitized_feed_name = cleanup_string(site.get('site') + collection_name)
         feed_summary = display_name
         available = collection.available
         collection_type = collection.type
