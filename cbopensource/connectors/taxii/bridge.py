@@ -380,7 +380,7 @@ class CbTaxiiFeedConverter(object):
                 use_icon = None
 
             data = build_feed_data(sanitized_feed_name,
-                                   feed_summary,
+                                   f"{site.get('site')} {collection_name}",
                                    feed_summary,
                                    site.get('site'),
                                    use_icon,
