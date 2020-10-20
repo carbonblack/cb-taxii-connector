@@ -379,7 +379,6 @@ class CbTaxiiFeedConverter(object):
             if not os.path.exists(use_icon):
                 _logger.warning(f"Unable to find feed icon at path {use_icon}")
                 use_icon = None
-            display = f"{site.get('site')} {collection_name}"
             data = build_feed_data(sanitized_feed_name,
                                    display_name,
                                    feed_summary,
