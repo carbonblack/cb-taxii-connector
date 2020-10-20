@@ -22,12 +22,15 @@ class UTC(datetime.tzinfo):
     """
 
     def utcoffset(self, dt):
+        """datetime -> minutes east of UTC (negative for west of UTC)"""
         return ZERO
 
     def tzname(self, dt):
+        """datetime -> string name of time zone."""
         return "UTC"
 
     def dst(self, dt):
+        """datetime -> DST offset in minutes east of UTC."""
         return ZERO
 
 

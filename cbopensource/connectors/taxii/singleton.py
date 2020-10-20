@@ -10,6 +10,9 @@ import unittest
 
 
 class SingleInstanceException(BaseException):
+    """
+    Class for singleton exceptions.
+    """
     pass
 
 
@@ -97,6 +100,11 @@ class SingleInstance(object):
 
 
 def f(name):
+    """
+    Function used for singleton unit tests.
+    :param name:
+    :return:
+    """
     tmp = logger.level
     logger.setLevel(logging.CRITICAL)  # we do not want to see the warning
     try:
