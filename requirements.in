@@ -17,7 +17,7 @@ git+https://github.com/carbonblack/cbfeeds.git@feature-python3-support
 stix
 cbapi
 cabby
-pyinstaller
+pyinstaller==3.6
 simplejson
 lxml
 ipaddress
