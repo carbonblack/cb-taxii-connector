@@ -66,7 +66,7 @@ def get_site():
             "username": "username",
             "password": "password",
             "collections": "*",
-            "icon_link": "icon_link",
+            "icon_link": ICON,
             "feeds_enable": True,
             "start_date": "2016-12-01 00:00:00",
             "use_https": True,
@@ -1040,10 +1040,10 @@ class TestStringMethods(unittest.TestCase):
 
     @staticmethod
     def _collection_cleanup():
-        if os.path.exists("./sitesomecollections"):
-            os.remove("./sitesomecollections")
-        if os.path.exists("./sitesomecollections.details"):
-            os.remove("./sitesomecollections.details")
+        if os.path.exists("./sitesomecollection"):
+            os.remove("./sitesomecollection")
+        if os.path.exists("./sitesomecollection.details"):
+            os.remove("./sitesomecollection.details")
 
     # noinspection PyUnusedLocal,DuplicatedCode
     @patch("cbopensource.connectors.taxii.bridge.parse_config")
@@ -1076,11 +1076,11 @@ class TestStringMethods(unittest.TestCase):
             cbt.perform()
 
             # check for feeds
-            assert os.path.exists("./sitesomecollections")
-            with open("./sitesomecollections", 'r') as file_handle:
+            assert os.path.exists("./sitesomecollection")
+            with open("./sitesomecollection", 'r') as file_handle:
                 data = json.loads(file_handle.read())
 
-            assert data['feedinfo']['name'] == "sitesomecollections"
+            assert data['feedinfo']['name'] == "sitesomecollection"
             assert len(data['reports']) == 5
             assert data['reports'][4]['iocs']['sha256'][
                        0] == 'ecebd25a39aaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
@@ -1121,11 +1121,11 @@ class TestStringMethods(unittest.TestCase):
             cbt.perform()
 
             # check for feeds
-            assert os.path.exists("./sitesomecollections")
-            with open("./sitesomecollections", 'r') as file_handle:
+            assert os.path.exists("./sitesomecollection")
+            with open("./sitesomecollection", 'r') as file_handle:
                 data = json.loads(file_handle.read())
 
-            assert data['feedinfo']['name'] == "sitesomecollections"
+            assert data['feedinfo']['name'] == "sitesomecollection"
             assert len(data['reports']) == 5
             assert data['reports'][4]['iocs']['sha256'][
                        0] == 'ecebd25a39aaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
