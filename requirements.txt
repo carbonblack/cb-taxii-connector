@@ -4,7 +4,6 @@
 #
 #    pip-compile requirements.in
 #
---index-url https://artifactory-pub.bit9.local/artifactory/api/pypi/pypi-virtual/simple
 
 altgraph==0.17            # via pyinstaller
 attrdict==2.0.1           # via cbapi
