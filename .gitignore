@@ -56,3 +56,7 @@ docs/_build/
 # PyBuilder
 target/
 
+# test and intellij stuff
+/cb-taxii-connector.iml
+/cbopensource/test/unit/sitesomecollections
+/cbopensource/test/unit/sitesomecollections.details

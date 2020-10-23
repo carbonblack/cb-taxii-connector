@@ -1,50 +1,59 @@
 #!/usr/bin/env python
 
 import argparse
-from cbopensource.connectors.taxii.bridge import runner
-import sys
-import os
 import logging
+import sys
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(message)s')
+from cbopensource.connectors.taxii.bridge import runner
+
 logger = logging.getLogger(__name__)
 
 
 def build_cli_parser():
-    parser = argparse.ArgumentParser()
+    the_parser = argparse.ArgumentParser()
 
     #
     # for each supported output type, add an option
     #
-    parser.add_argument("-c", "--config",
-                        action="store",
-                        dest="config_path",
-                        help="CBTaxii config file")
+    the_parser.add_argument("-c", "--config",
+                            action="store",
+                            dest="config_path",
+                            help="CBTaxii config file")
 
-    parser.add_argument("-e", "--export-dir",
-                        action="store",
-                        dest="export_dir",
-                        help="Export mode")
+    the_parser.add_argument("-d", "--debug",
+                            action="store_true",
+                            help="Enter debug mode")
 
-    parser.add_argument("-i", "--import-dir",
-                        action="store",
-                        dest="import_dir",
-                        help="Parse XML from files")
+    the_parser.add_argument("-e", "--export-dir",
+                            action="store",
+                            dest="export_dir",
+                            help="Export mode")
 
-    parser.add_argument("-d", "--debug",
-                        action="store_true",
-                        help="Enter debug mode")
+    the_parser.add_argument("-i", "--import-dir",
+                            action="store",
+                            dest="import_dir",
+                            help="Parse XML from files")
 
-    return parser
+    the_parser.add_argument("-s", "--strict",
+                            action="store_true",
+                            help="Strict validation mode")
+
+    return the_parser
+
 
 if __name__ == "__main__":
 
     parser = build_cli_parser()
     args = parser.parse_args()
 
+    if args.debug:
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(asctime)s %(message)s')
+    else:
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(message)s')
+
     if not args.config_path:
         logger.error("Missing config file path")
         parser.print_help()
         sys.exit(-1)
 
-    runner(args.config_path, args.debug, args.import_dir, args.export_dir)
+    runner(args.config_path, args.debug, args.import_dir, args.export_dir, args.strict)
