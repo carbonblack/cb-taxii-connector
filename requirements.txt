@@ -4,7 +4,6 @@
 #
 #    pip-compile requirements.in
 #
-
 altgraph==0.17            # via pyinstaller
 attrdict==2.0.1           # via cbapi
 cabby==0.1.20             # via -r requirements.in
@@ -20,7 +19,7 @@ furl==2.1.0               # via cabby
 idna==2.10                # via requests
 ipaddress==1.0.23         # via -r requirements.in
 libtaxii==1.1.118         # via cabby
-lxml==4.2.5               # via -r requirements.in, cybox, libtaxii, mixbox, stix
+lxml==4.6.2               # via -r requirements.in, cybox, libtaxii, mixbox, stix
 mixbox==1.0.3             # via cybox, stix
 mock==4.0.2               # via -r requirements.in
 ordered-set==4.0.2        # via mixbox
