@@ -5,6 +5,7 @@
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
+%define _build_id_links none
 
 Summary: Carbon Black Taxii Connector
 Name: %{name}
