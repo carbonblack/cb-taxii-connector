@@ -45,7 +45,12 @@ mkdir -p /usr/share/cb/integrations/cbtaxii/feeds/
 chown -R cb:cb /var/log/cb/integrations/cbtaxii
 chown -R cb:cb /usr/share/cb/integrations/cbtaxii/feeds/
 chmod +x /usr/share/cb/integrations/cbtaxii/cbtaxii
-
+chmod -R u+r /usr/share/cb/integrations/cbtaxii/bin
+chmod -R g+r /usr/share/cb/integrations/cbtaxii/bin
+chmod -R o+r /usr/share/cb/integrations/cbtaxii/bin
+chmod -R u+r /usr/share/cb/integrations/cbtaxii/bin/cbapi/
+chmod -R g+r /usr/share/cb/integrations/cbtaxii/bin/cbapi/
+chmod -R o+r /usr/share/cb/integrations/cbtaxii/bin/cbapi/
 
 %files -f INSTALLED_FILES
 %defattr(-,root,root)
