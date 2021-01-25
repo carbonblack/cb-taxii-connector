@@ -23,6 +23,9 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.gradle/
+MANIFEST
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -58,5 +61,5 @@ target/
 
 # test and intellij stuff
 /cb-taxii-connector.iml
-/cbopensource/test/unit/sitesomecollections
-/cbopensource/test/unit/sitesomecollections.details
+/src/cbopensource/test/unit/sitesomecollections
+/src/cbopensource/test/unit/sitesomecollections.details

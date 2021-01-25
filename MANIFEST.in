@@ -1,0 +1,3 @@
+recursive-include src/cbopensource *
+recursive-include root/etc *
+recursive-include root/usr *

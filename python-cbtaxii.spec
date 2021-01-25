@@ -1,17 +1,18 @@
 %define name python-cbtaxii
 %define version 2.0.0
-%define unmangled_version 2.0.0
 %define release 1
 %global _enable_debug_package 0
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 %define _build_id_links none
 
+%define venv_location $VIRTUAL_ENV_PATH
+
 Summary: VMware Carbon Black EDR Taxii Connector
 Name: %{name}
 Version: %{version}
 Release: %{release}%{?dist}
-Source0: %{name}-%{unmangled_version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 License: MIT
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -24,13 +25,13 @@ Url: http://www.carbonblack.com/
 UNKNOWN
 
 %prep
-%setup -n %{name}-%{unmangled_version}
+%setup -n %{name}-%{version}
 
 %build
-pyinstaller cb-taxii-connector.spec
+%{venv_location}/bin/pyinstaller cb-taxii-connector.spec
 
 %install
-python setup.py install_cb --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
+%{venv_location}/bin/python setup.py install_cb --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 
 %clean
 rm -rf $RPM_BUILD_ROOT
