@@ -22,7 +22,6 @@ echo Running smoke test on file: "$RPM_FILE"
 
 yum install -y "$RPM_FILE"
 
-python -V
 echo Running connector...
 /usr/share/cb/integrations/cbtaxii/bin/cb-taxii-connector -c /etc/cb/integrations/cbtaxii/cbtaxii.conf
 
