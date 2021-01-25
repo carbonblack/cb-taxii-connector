@@ -6,11 +6,6 @@ from distutils.spawn import spawn
 from distutils.file_util import write_file
 from distutils.util import change_root, convert_path
 
-# from distutils.core import Command, setup
-# from distutils.file_util import write_file
-# from distutils.util import change_root, convert_path
-# from subprocess import call
-
 import os
 
 class RpmDirs(object):
