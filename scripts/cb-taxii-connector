@@ -4,7 +4,7 @@ import argparse
 import logging
 import sys
 
-from src.cbopensource.connectors.taxii import runner
+from cbopensource.connectors.taxii import runner
 
 logger = logging.getLogger(__name__)
 

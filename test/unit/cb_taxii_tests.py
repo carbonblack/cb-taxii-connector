@@ -14,9 +14,9 @@ import simplejson as json
 from mock import MagicMock, patch
 from stix.core import STIXPackage
 
-from src.cbopensource.connectors.taxii import CbTaxiiFeedConverter, dt_to_seconds
-from src.cbopensource.connectors.taxii import parse_config, TaxiiConfigurationException
-from src.cbopensource.connectors.taxii import cybox_parse_observable, validate_domain_name, \
+from cbopensource.connectors.taxii import CbTaxiiFeedConverter, dt_to_seconds
+from cbopensource.connectors.taxii import parse_config, TaxiiConfigurationException
+from cbopensource.connectors.taxii import cybox_parse_observable, validate_domain_name, \
     validate_ip_address, validate_md5sum, validate_sha256
 
 HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))

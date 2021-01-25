@@ -22,8 +22,9 @@ echo Running smoke test on file: "$RPM_FILE"
 
 yum install -y "$RPM_FILE"
 
-echo Starting service...
-service cb-threatconnect-connector start
+python -V
+echo Running connector...
+/usr/share/cb/integrations/cbtaxii/bin/cb-taxii-connector -c /etc/cb/integrations/cbtaxii/cbtaxii.conf
 
 # Uncomment the following line to leave the container running.
 # sleep 9999999999
