@@ -19,8 +19,8 @@ from cbopensource.connectors.taxii.config_util import parse_config, TaxiiConfigu
 from cbopensource.connectors.taxii.cybox_parse import cybox_parse_observable, validate_domain_name, \
     validate_ip_address, validate_md5sum, validate_sha256
 
-HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-RESOURCE_PATH_PREFIX = os.path.join(HOME, 'cbopensource', 'test', 'resources')
+HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+RESOURCE_PATH_PREFIX = os.path.join(HOME, 'test', 'resources')
 ICON = os.path.abspath(os.path.join(HOME, 'root', 'usr', 'share', 'cb', 'integrations', 'cbtaxii', 'taxii-logov2.png'))
 
 Collection = collections.namedtuple('Collection', 'name available type')
