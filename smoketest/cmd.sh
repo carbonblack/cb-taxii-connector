@@ -23,6 +23,7 @@ echo Running smoke test on file: "$RPM_FILE"
 yum install -y "$RPM_FILE"
 
 echo Running connector...
+cp /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxii/cbtaxii.conf
 /usr/share/cb/integrations/cbtaxii/bin/cb-taxii-connector -c /etc/cb/integrations/cbtaxii/cbtaxii.conf
 
 # Uncomment the following line to leave the container running.
