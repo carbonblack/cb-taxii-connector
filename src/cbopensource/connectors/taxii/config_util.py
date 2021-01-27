@@ -29,11 +29,15 @@ def parse_config(config_file_path: str, strict_mode: bool = False) -> Dict[str, 
     :return: compiled configuration dictionary
     :raises TaxiiConfigurationException:
     """
-    config_defaults = {"server_url": "https://127.0.0.1", "auth_token": None,
-                       "http_proxy_url": None, "https_proxy_url": None, f"reports_limit": "10000",
-                       "reset_start_date": "False"}
+    config_defaults = { 'cbonfig':
+        { "server_url": "https://127.0.0.1",
+          "auth_token": None,
+          "http_proxy_url": None,
+          "https_proxy_url": None,
+          "reports_limit": "10000",
+          "reset_start_date": "False" }}
 
-    config = configparser.ConfigParser(defaults=config_defaults)
+    config = configparser.RawConfigParser(defaults=config_defaults)
 
     if config_file_path is None:
         raise TaxiiConfigurationException("Config File: must be specified")
@@ -45,8 +49,8 @@ def parse_config(config_file_path: str, strict_mode: bool = False) -> Dict[str, 
 
     server_url = config.get("cbconfig", "server_url")
     api_token = config.get("cbconfig", "auth_token")
-    http_proxy_url = config.get("cbconfig", 'http_proxy_url')
-    https_proxy_url = config.get("cbconfig", 'https_proxy_url')
+    http_proxy_url = config.get("cbconfig", 'http_proxy_url', fallback=None)
+    https_proxy_url = config.get("cbconfig", 'https_proxy_url', fallback=None)
 
     sites = []
 
@@ -223,6 +227,8 @@ def parse_config(config_file_path: str, strict_mode: bool = False) -> Dict[str, 
         except ValueError:
             raise TaxiiConfigurationException(f"Config File: `reports_limit` for section `{section}`"
                                               " must be an integer")
+        except configparser.NoOptionError:
+            reports_limit = 10000
         if reports_limit < 1:
             raise TaxiiConfigurationException(f"Config File: `reports_limit` for section `{section}`"
                                               " must be at least 1")
