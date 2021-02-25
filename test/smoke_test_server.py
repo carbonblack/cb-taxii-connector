@@ -158,9 +158,10 @@ def collection_management():
                              "Content-Type": "application/xml"})
     return response
 
+
 @app.route('/read-only/services/poll', methods=["POST"])
 def services_poll():
-    poll_response="""<taxii_11:Poll_Response xmlns:taxii_11="http://taxii.mitre.org/messages/taxii_xml_binding-1.1" 
+    poll_response = """<taxii_11:Poll_Response xmlns:taxii_11="http://taxii.mitre.org/messages/taxii_xml_binding-1.1" 
     message_id="42158"  in_response_to="20079" 
     collection_name="smoketest" more="false" result_part_number="1">
     <taxii_11:Inclusive_End_Timestamp>2014-12-19T12:00:00Z</taxii_11:Inclusive_End_Timestamp>
