@@ -20,11 +20,21 @@ useradd --shell /sbin/nologin --gid cb --comment "Service account for VMware Car
 
 echo Running smoke test on file: "$RPM_FILE"
 
-yum install -y "$RPM_FILE"
+rpm -ivh "$RPM_FILE"
+
+echo 'Starting smoke test server'
+cd $2/../test ; FLASK_APP=smoke_test_server.py python3.8 -m flask run --cert=adhoc &
 
 echo Running connector...
-cp /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxii/cbtaxii.conf
+cp $2/cbtaxii.conf /etc/cb/integrations/cbtaxii/cbtaxii.conf
 /usr/share/cb/integrations/cbtaxii/bin/cb-taxii-connector -c /etc/cb/integrations/cbtaxii/cbtaxii.conf
+
+#ensure the ioc has been written into the smoketest feed
+sleep 3
+grep "example-Observable-87c9a5bb-d005-4b3e-8081-99f720fad62b" /usr/share/cb/integrations/cbtaxii/feeds/*smoketest >/dev/null || (echo 'cbtaxii not working correctly' ; exit 1 )
+echo 'cbtaxii connector working correctly!'
+
+yum -y remove python-cbtaxii
 
 # Uncomment the following line to leave the container running.
 # sleep 9999999999
