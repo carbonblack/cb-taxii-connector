@@ -190,7 +190,7 @@ scripts = {
 
 setup(
     name='python-cb-taxii-connector',
-    version='2.1.1',
+    version='2.0.0',
     packages=['cbopensource', 'cbopensource.connectors', 'cbopensource.connectors.taxii'],
     package_dir={'': 'src'},
     url='https://github.com/carbonblack/cb-taxii-connector',
@@ -198,7 +198,7 @@ setup(
     author='VMware Carbon Black Developer Network',
     author_email='dev-support@carbonblack.com',
     description=
-        'Connector between VMware Carbon Black EDR and ThreatConnect',
+        'Connector between VMware Carbon Black EDR and STIX/TAXII ',
     data_files=data_files,
     classifiers=[
         'Development Status :: 4 - Beta',

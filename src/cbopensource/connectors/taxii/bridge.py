@@ -1,8 +1,7 @@
-#
+# coding: utf-8
 # Copyright © 2014-2020 VMware, Inc. All Rights Reserved.
-#
+################################################################################
 
-import functools
 import gc
 import logging
 import os
@@ -16,46 +15,58 @@ from multiprocessing import Process, Value
 from time import gmtime, strftime
 # noinspection PyProtectedMember
 from timeit import default_timer as timer
+from typing import Any, Dict, List, Optional, Union
+
 import cbint
-from cbint.utils import cbserver, feed, flaskfeed
 import flask
 import simplejson
 from cbapi.errors import ServerError
 from cbapi.example_helpers import get_object_by_name_or_id
 from cbapi.response import CbResponseAPI, Feed
+from cbint.utils import cbserver, flaskfeed
 from cbint.utils.daemon import CbIntegrationDaemon
 
-from cbopensource.driver.taxii import TaxiiDriver
 from cbopensource.constant import MiB
+from cbopensource.driver.taxii import TaxiiDriver
+# override JSON used
+from cbopensource.driver.taxii_server_config import TaxiiServerConfiguration
 from . import version
-from .config import Config
 from .feed_cache import FeedCache
+from .taxii_connector_config import TaxiiConnectorConfiguration, TaxiiConnectorConfigurationException
 
 sys.modules['json'] = simplejson
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
+
+__all__ = ['log_option_value', 'TimeStamp', 'CarbonBlackTaxiiBridge']
 
 
 # noinspection PySameParameterValue
-def log_option_value(label, value, padding=27):
-    logger.info("{0:{2}}: {1}".format(label, value, padding))
+def log_option_value(label: str, value: Union[str, int], padding: int = 27) -> None:
+    """
+    Info log display of a given option.
+
+    :param label: Option label
+    :param value: option value
+    :param padding: padding
+    """
+    _logger.info(f"{label:{padding}}: {value}")
 
 
 class TimeStamp(object):
-    def __init__(self, stamp=False):
-        self._value = gmtime() if stamp else None
+    """
+    Class to store and work with timestamps.
+    """
 
-    def stamp(self):
+    def __init__(self, stamp: bool = False):
         """
-        Stamps the value of this TimeStamp with the current time.
-        """
-        self._value = gmtime()
+        Initialize the class.
 
-    # noinspection PyUnusedFunction
-    def clone(self):
-        ts = TimeStamp()
-        ts._value = self._value
-        return ts
+        :param stamp: If True, initialize with the current GMT time
+        """
+        self._value = None
+        if stamp:
+            self.stamp()
 
     def __str__(self):
         if not self._value:
@@ -65,51 +76,74 @@ class TimeStamp(object):
     def __repr__(self):
         return "TimeStamp({0})".format(self.__str__())
 
+    # --------------------------------------------------------------------------------
 
-def return_value_to_shared_value(func):
-    @functools.wraps(func)
-    def wrapped_func(*args, **kwargs):
-        shared_return = kwargs.pop("shared_return", None)
-        returned_value = func(*args, **kwargs)
-        if shared_return:
-            shared_return.value = returned_value
-        return returned_value
+    def stamp(self) -> None:
+        """
+        Stamps the value of this TimeStamp with the current GMT time.
+        """
+        self._value = gmtime()
 
-    return wrapped_func
+    # noinspection PyUnusedFunction
+    def clone(self) -> 'TimeStamp':
+        """
+        Create a cloned object.
+
+        :return: New object with the same timestamp.
+        """
+        ts = TimeStamp()
+        ts._value = self._value
+        return ts
 
 
 class CarbonBlackTaxiiBridge(CbIntegrationDaemon):
-    def __init__(self, name, configfile, logfile=None, pidfile=None, debug=False):
+    """
+    Class to manage the bridge bewteen EDR and the Taxii services.
+    """
+
+    def __init__(self, name: str, configfile: str, logfile: str = None, pidfile: str = None, debug: bool = False):
+        """
+        Initialize the class.
+
+        :param name: name of the connector
+        :param configfile: path to the config file
+        :param logfile: path to the log file
+        :param pidfile: path to the PID file
+        :param debug: If True, execute in DEBUG mode
+        """
 
         CbIntegrationDaemon.__init__(self, name, configfile=configfile, logfile=logfile, pidfile=pidfile, debug=debug)
+        # NOTE: at this point, 'self.cfg' contains the RawConfigParser() object based on the supplied config.ini
+        #       'self.options' contains a Dict parsed from the 'self.cfg' with a key for each stanza
 
-        # noinspection PyUnresolvedReferences
-        self.flask_feed = cbint.utils.flaskfeed.FlaskFeed(__name__, False, Config.directory)
-        self._config = None
-        self.taxii_servers = []
+        self.flask_feed = flaskfeed.FlaskFeed(__name__, False, TaxiiConnectorConfiguration.DIRECTORY)
+        self._config: Optional[TaxiiConnectorConfiguration] = None
+        self.taxii_servers: List[Dict] = []
         self.api_urns = {}
         self.validated_config = False
-        self.cb = None
+        self.cb: Optional[CbResponseAPI] = None
         self.sync_needed = False
         self.feed_lock = threading.RLock()
         self.logfile = logfile
         self.debug = debug
         self._log_handler = None
-        self.logger = logger
+        self.logger = _logger
         self.process = None
         self.feed_cache = None
 
-        self.flask_feed.app.add_url_rule(Config.cb_image_path, view_func=self.handle_cb_image_request)
-        self.flask_feed.app.add_url_rule(Config.integration_image_path,
+        self.flask_feed.app.add_url_rule(TaxiiConnectorConfiguration.CB_IMAGE_PATH,
+                                         view_func=self.handle_cb_image_request)
+        self.flask_feed.app.add_url_rule(TaxiiConnectorConfiguration.INTEGRATION_IMAGE_PATH,
                                          view_func=self.handle_integration_image_request)
-        self.flask_feed.app.add_url_rule(Config.json_feed_path, view_func=self.handle_json_feed_request,
+        self.flask_feed.app.add_url_rule(TaxiiConnectorConfiguration.JSON_FEED_PATH,
+                                         view_func=self.handle_json_feed_request,
                                          methods=['GET'])
         self.flask_feed.app.add_url_rule("/", view_func=self.handle_index_request, methods=['GET'])
         self.flask_feed.app.add_url_rule("/feed.html", view_func=self.handle_html_feed_request, methods=['GET'])
 
         self.initialize_logging()
 
-        logger.debug("generating feed metadata")
+        _logger.debug("generating feed metadata")
 
         with self.feed_lock:
             self.last_sync = TimeStamp()
@@ -118,11 +152,15 @@ class CarbonBlackTaxiiBridge(CbIntegrationDaemon):
 
         signal.signal(signal.SIGTERM, self._sigterm_handler)
 
-    def initialize_logging(self):
+    def initialize_logging(self) -> None:
+        """
+        Initialize the bridge logging.
+        """
         if not self.logfile:
-            log_path = "/var/log/cb/integrations/%s/" % self.name
+            log_path = f"/var/log/cb/integrations/{self.name}/"
+            # noinspection PyUnresolvedReferences
             cbint.utils.filesystem.ensure_directory_exists(log_path)
-            self.logfile = "%s%s.log" % (log_path, self.name)
+            self.logfile = f"{log_path}{self.name}.log"
 
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG if self.debug else logging.INFO)
@@ -136,145 +174,217 @@ class CarbonBlackTaxiiBridge(CbIntegrationDaemon):
         self.logger = root_logger
 
     @property
-    def integration_name(self):
-        return 'Cb Taxii Connector {0}'.format(version.__version__)
+    def integration_name(self) -> str:
+        """
+        :return: The integration name and version
+        """
+        return f'Cb Taxii Connector {version.__version__}'
 
-    def serve(self):
+    def serve(self) -> None:
+        """
+        Start the server.
+        """
         if self._config.https_proxy:
             os.environ['HTTPS_PROXY'] = self._config.https_proxy
             os.environ['no_proxy'] = '127.0.0.1,localhost'
 
-        address = self._config.listen_address
-        port = self._config.listen_port
-        logger.info("starting flask server: %s:%s" % (address, port))
-        self.flask_feed.app.run(port=port, debug=self.debug,
-                                host=address, use_reloader=False)
+        address = self._config.listener_address
+        port = self._config.listener_port
+        _logger.info(f"starting flask server: {address}:{port}")
+        self.flask_feed.app.run(port=port, debug=self.debug, host=address, use_reloader=False)
 
     def handle_json_feed_request(self):
+        """
+        Handle a JSON feed request.
+
+        TODO: properly type return!
+        :return:
+        """
         self._report_memory_usage("hosting")
         return flask.send_from_directory(self.feed_cache.location, self.feed_cache.file_name,
                                          mimetype='application/json')
 
     def handle_html_feed_request(self):
-        feed = self.feed_cache.read()
-        if not feed:
+        """
+        Handle an HTML feed request.
+
+        TODO: properly type return!
+        :return:
+        """
+        the_feed = self.feed_cache.read()
+        if not the_feed:
             return flask.Response(status=404)
 
-        html = self.flask_feed.generate_html_feed(feed, self._config.display_name)
-        del feed
+        html = self.flask_feed.generate_html_feed(the_feed, self._config.DISPLAY_NAME)
+        del the_feed
         gc.collect()
         return html
 
     def handle_index_request(self):
+        """
+        Handle an index request.
+
+        TODO: properly type return!
+        :return:
+        """
         with self.feed_lock:
             index = self.flask_feed.generate_html_index(self.feed_cache.generate_feed(), self._config.options,
-                                                        self._config.display_name, self._config.cb_image_path,
-                                                        self._config.integration_image_path,
-                                                        self._config.json_feed_path, str(self.last_sync))
+                                                        self._config.DISPLAY_NAME, self._config.CB_IMAGE_PATH,
+                                                        self._config.INTEGRATION_IMAGE_PATH,
+                                                        self._config.JSON_FEED_PATH, str(self.last_sync))
         return index
 
     def handle_cb_image_request(self):
-        return self.flask_feed.generate_image_response(image_path="%s%s" % (self._config.directory,
-                                                                            self._config.cb_image_path))
+        """
+        Handle a CB image request.
+
+        TODO: properly type return!
+        :return:
+        """
+        return self.flask_feed.generate_image_response(
+            image_path=f"{self._config.DIRECTORY}{self._config.CB_IMAGE_PATH}")
 
     def handle_integration_image_request(self):
-        return self.flask_feed.generate_image_response(image_path="%s%s" %
-                                                                  (self._config.directory,
-                                                                   self._config.integration_image_path))
+        """
+        Handle an integration image request.
 
-    def on_starting(self):
+        TODO: properly type return!
+        :return:
+        """
+        return self.flask_feed.generate_image_response(image_path=(f"{self._config.DIRECTORY}"
+                                                                   f"{self._config.INTEGRATION_IMAGE_PATH}"))
+
+    def on_starting(self) -> None:
+        """
+        On startup, check the feed cache.
+        """
         self.feed_cache.verify()
 
-    def run(self):
-        logger.info("starting VMware Carbon Black EDR <-> taxii Connector | version %s" % version.__version__)
-        logger.debug("starting continuous feed retrieval thread")
+    def run(self) -> None:
+        """
+        Begin execution of the service.
+        """
+        _logger.info(f"starting VMware Carbon Black EDR <-> taxii Connector | version {version.__version__}")
+        _logger.debug("starting continuous feed retrieval thread")
         work_thread = threading.Thread(target=self.perform_continuous_feed_retrieval)
         work_thread.setDaemon(True)
         work_thread.start()
 
-        logger.debug("starting flask")
+        _logger.debug("starting flask")
         self.serve()
 
-    def validate_config(self):
+    def validate_config(self) -> bool:
+        """
+        Validate internal configuration.  If already validated, we simply return.
+
+        :return: True if valid, False otherwise
+        :raises: ValueError if there are configuration problems
+        """
         if self.validated_config:
             return True
 
         self.validated_config = True
-        logger.debug("Loading configuration options...")
+        _logger.debug("Loading configuration options...")
 
         try:
             if 'bridge' not in self.options:
                 raise ValueError("Configuration does not contain a [bridge] section")
 
-            self._config = Config(self.options['bridge'])
-            if self._config.errored:
+            # NOTE: 'bridge' contains the connector settings
+            try:
+                self._config = TaxiiConnectorConfiguration.parse(self.options['bridge'])
+            except TaxiiConnectorConfigurationException:
                 return False
 
-            self.debug = self._config.debug
-            self.logger.setLevel(logging.DEBUG if self.debug else logging.getLevelName(self._config.log_level))
-            self._log_handler.maxBytes = self._config.log_file_size
+            self.debug = self._config['debug']
+            self.logger.setLevel(logging.DEBUG if self.debug else logging.getLevelName(self._config['log_level']))
+            self._log_handler.maxBytes = self._config['log_file_size']
 
+            # NOTE: All other option keys besides 'bridge' contain settings for each taxii server
             taxii_server_sections = list(filter(lambda section: section != 'bridge', self.cfg.sections()))
             if not taxii_server_sections:
                 raise ValueError("Configuration does not contain section(s) defining a taxii server")
-            self.taxii_servers = (self.cfg[server_section] for server_section in taxii_server_sections)
+            self.taxii_servers = [TaxiiServerConfiguration.parse(self.cfg[server_section]).dict for server_section
+                                  in taxii_server_sections]
 
             ca_file = os.environ.get("REQUESTS_CA_BUNDLE", None)
             log_option_value("CA Cert File", ca_file if ca_file else "No CA Cert file found.")
 
-            self.feed_cache = FeedCache(self._config, self._config.cache_path, self.feed_lock)
+            self.feed_cache = FeedCache(self._config, self._config['cache_folder'], self.feed_lock)
 
-            if not self._config.skip_cb_sync:
+            if not self._config['skip_cb_sync']:
                 try:
-                    self.cb = CbResponseAPI(url=self._config.server_url,
-                                            token=self._config.server_token,
+                    self.cb = CbResponseAPI(url=self._config['carbonblack_server_url'],
+                                            token=self._config['carbonblack_server_token'],
                                             ssl_verify=False,
                                             integration_name=self.integration_name)
                     self.cb.info()
                 except Exception as e:
-                    raise ValueError("Could not connect to Cb Response server: {0}".format(e))
+                    raise ValueError(f"Could not connect to Cb Response server: {e}")
 
         except ValueError as e:
-            sys.stderr.write("Configuration Error: {}\n".format(e))
-            logger.error(e)
+            sys.stderr.write(f"Configuration Error: {e}\n")
+            _logger.error(e)
             return False
 
         return True
 
     # noinspection PyUnusedLocal
     @staticmethod
-    def _report_memory_usage(title):
-        gc.collect()
-        # import psutil
-        # m = psutil.Process().memory_info()
-        # print("({:<10}) [{}] Memory Usage: [{:14,}] [{:14,}] [{:14,}]".format(title, psutil.Process().pid, m.rss,
-        #                                                                       m.data, m.vms))
+    def _report_memory_usage(title: str) -> None:
+        """
+        Private method to report current memory usage.
 
-    @return_value_to_shared_value
-    def _do_write_reports(self):
+        NOTE: currently stubbed to only perform garbage collection.
+        :param title: title of the report
+        """
+        gc.collect()
+
+    @staticmethod
+    def handle_shared_return(shared_return, value: Any) -> Any:
+        """
+        Set a value parameter on a shared return object (if provided), or juet return it.
+        :param shared_return:
+        :param value:
+        :return:
+        """
+        if shared_return is not None:
+            shared_return.value = value
+        return value
+
+    def _do_write_reports(self, shared_return=None) -> bool:
+        """
+        Private method to write TAXII reports.
+
+        :return: True if successful
+        """
         start = timer()
         self._report_memory_usage("writing")
         with self.feed_cache.create_stream() as feed_stream:
             tc = TaxiiDriver(self.taxii_servers)
             if tc.write_reports(feed_stream):
                 self.last_successful_sync.stamp()
-                logger.info("Successfully retrieved data at {0} ({1:.3f} seconds total)".format(
+                _logger.info("Successfully retrieved data at {0} ({1:.3f} seconds total)".format(
                     self.last_successful_sync, timer() - start))
                 self._report_memory_usage("saved")
-                return True
+                return self.handle_shared_return(shared_return, True)
             else:
-                logger.warning("Failed to retrieve data at {0} ({1:.3f} seconds total)".format(
+                _logger.warning("Failed to retrieve data at {0} ({1:.3f} seconds total)".format(
                     TimeStamp(True), timer() - start))
-        return False
+        return self.handle_shared_return(shared_return, False)
 
-    @return_value_to_shared_value
-    def _do_retrieve_reports(self):
+    def _do_retrieve_reports(self, shared_return=None) -> bool:
+        """
+        Private method to retrieve TAXII reports.
+
+        :return: True if successful
+        """
         start = timer()
         self._report_memory_usage("reading")
         tc = TaxiiDriver(self.taxii_servers)
         reports = tc.generate_reports()
         self._report_memory_usage("generated")
-        logger.debug("Retrieved reports ({0:.3f} seconds).".format(timer() - start))
+        _logger.debug("Retrieved reports ({0:.3f} seconds).".format(timer() - start))
         if reports:
             # Instead of rewriting the cache file directly, we're writing to a temporary file
             # and then moving it onto the cache file so that we don't have a situation where
@@ -282,30 +392,41 @@ class CarbonBlackTaxiiBridge(CbIntegrationDaemon):
             if self.feed_cache.write_reports(reports):
                 self.last_successful_sync.stamp()
                 del reports
-                logger.info("Successfully retrieved data at {0} ({1:.3f} seconds total)".format(
+                _logger.info("Successfully retrieved data at {0} ({1:.3f} seconds total)".format(
                     self.last_successful_sync, timer() - start))
                 self._report_memory_usage("saved")
-                return True
+                self.handle_shared_return(shared_return, True)
             else:
-                logger.warning("Failed to retrieve data at {0} ({1:.3f} seconds total)".format(
+                _logger.warning("Failed to retrieve data at {0} ({1:.3f} seconds total)".format(
                     TimeStamp(True), timer() - start))
-        return False
+        return self.handle_shared_return(shared_return, False)
 
-    # noinspection PyShadowingNames,PyUnusedLocal
-    def _sigterm_handler(self, signal, frame):
-        logger.info("Process shutting down...")
+    # noinspection PyUnusedLocal
+    def _sigterm_handler(self, the_signal, frame) -> None:
+        """
+        Private method to handle termination signals.
+
+        :param the_signal: the signal received
+        :param frame: the current stack frame
+        """
+        _logger.info("Process shutting down...")
         if self.process:
-            logger.info("Sub-process found.  Terminating...")
+            _logger.info("Sub-process found.  Terminating...")
             self.process.terminate()
-            logger.info("Sub-process terminated.")
+            _logger.info("Sub-process terminated.")
         sys.exit()
 
-    def _retrieve_reports(self):
-        if self._config.multi_core:
+    def _retrieve_reports(self) -> bool:
+        """
+        Private metheod to write or retrieve reports, depending on multi-core status and/or use of a feed stream.
+
+        :return: True if successful
+        """
+        if self._config['multi_core']:
             success = Value('B', False)
             self._report_memory_usage("before")
             process = Process(
-                target=self._do_write_reports if self._config.use_feed_stream else self._do_retrieve_reports,
+                target=self._do_write_reports if self._config['use_feed_stream'] else self._do_retrieve_reports,
                 kwargs={'shared_return': success})
             process.start()
             self.process = process
@@ -316,15 +437,21 @@ class CarbonBlackTaxiiBridge(CbIntegrationDaemon):
             return success.value
         return self._do_retrieve_reports()
 
-    def perform_continuous_feed_retrieval(self, loop_forever=True):
-        # noinspection PyBroadException
+    def perform_continuous_feed_retrieval(self, loop_forever=True) -> str:
+        """
+        Method to poll the feeds one time or continuously (until terminated).
+
+        :param loop_forever: If True, loop until terminated
+        :return: feed cache, if not looping
+        """
         try:
             self.validate_config()
 
-            cbint.utils.filesystem.ensure_directory_exists(self._config.cache_path)
+            # noinspection PyUnresolvedReferences
+            cbint.utils.filesystem.ensure_directory_exists(self._config['cache_folder'])
 
             while True:
-                logger.info("Starting feed retrieval.")
+                _logger.info("Starting feed retrieval.")
                 errored = True
 
                 try:
@@ -333,42 +460,44 @@ class CarbonBlackTaxiiBridge(CbIntegrationDaemon):
                         self._sync_cb_feed()
                         errored = False
                 except Exception as e:
-                    logger.exception("Error occurred while attempting to retrieve feed: {0}".format(e))
+                    _logger.exception("Error occurred while attempting to retrieve feed: {0}".format(e))
                 gc.collect()
 
                 self.last_sync.stamp()
-                logger.debug("Feed report retrieval completed{0}.".format(" (Errored)" if errored else ""))
+                _logger.debug("Feed report retrieval completed{0}.".format(" (Errored)" if errored else ""))
 
                 if not loop_forever:
                     return self.feed_cache.read(as_text=True)
 
                 # Full sleep interval is taken between feed retrieval work.
-                time.sleep(self._config.feed_retrieval_minutes * 60)
+                time.sleep(self._config['feed_retrieval_minutes'] * 60)
 
-        except Exception:
+        except Exception as err:
             # If an exception makes us exit then log what we can for our own sake
-            logger.fatal("FEED RETRIEVAL LOOP IS EXITING! Daemon should be restarted to restore functionality! ")
-            logger.fatal("Fatal Error Encountered:\n %s" % traceback.format_exc())
+            _logger.fatal("FEED RETRIEVAL LOOP IS EXITING! Daemon should be restarted to restore functionality!")
+            _logger.fatal(f"Fatal Error Encountered:\n{err}\n{traceback.format_exc()}")
             sys.stderr.write("FEED RETRIEVAL LOOP IS EXITING! Daemon should be restarted to restore functionality!\n")
-            sys.stderr.write("Fatal Error Encountered:\n %s\n" % traceback.format_exc())
+            sys.stderr.write(f"Fatal Error Encountered:\n{err}\n{traceback.format_exc()}")
             sys.exit(3)
 
-    def _sync_cb_feed(self):
-        if self._config.skip_cb_sync:
+    def _sync_cb_feed(self) -> None:
+        """
+        Private method to sync EDR feeds.
+        """
+        if self._config['skip_cb_sync']:
             return
 
         try:
-            feeds = get_object_by_name_or_id(self.cb, Feed, name=self._config.feed_name)
+            feeds = get_object_by_name_or_id(self.cb, Feed, name=self._config.FEED_NAME)
         except Exception as e:
-            logger.error(e)
+            _logger.error(e)
             feeds = None
 
         if not feeds:
-            logger.info("Feed {} was not found, so we are going to create it".format(self._config.feed_name))
+            _logger.info(f"Feed {self._config.FEED_NAME} was not found, so we are going to create it")
             f = self.cb.create(Feed)
-            f.feed_url = "http://{0}:{1}/taxii/json".format(
-                self._config.host_address,
-                self._config.listen_port)
+            # noinspection HttpUrlsUsage
+            f.feed_url = f"http://{self._config['host_address']}:{self._config['listener_port']}/taxii/json"
             f.enabled = True
             f.use_proxy = False
             f.validate_server_cert = False
@@ -376,25 +505,25 @@ class CarbonBlackTaxiiBridge(CbIntegrationDaemon):
                 f.save()
             except ServerError as se:
                 if se.error_code == 500:
-                    logger.info("Could not add feed:")
-                    logger.info(
+                    _logger.info("Could not add feed:")
+                    _logger.info(
                         " Received error code 500 from server. "
                         "This is usually because the server cannot retrieve the feed.")
-                    logger.info(
+                    _logger.info(
                         " Check to ensure the Cb server has network connectivity and the credentials are correct.")
                 else:
-                    logger.info("Could not add feed: {0:s}".format(str(se)))
+                    _logger.info(f"Could not add feed: {str(se)}")
             except Exception as e:
-                logger.info("Could not add feed: {0:s}".format(str(e)))
+                _logger.info(f"Could not add feed: {str(e)}")
             else:
-                logger.info("Feed data: {0:s}".format(str(f)))
-                logger.info("Added feed. New feed ID is {0:d}".format(f.id))
+                _logger.info(f"Feed data: {str(f)}")
+                _logger.info(f"Added feed. New feed ID is {f.id}")
                 f.synchronize(False)
 
         elif len(feeds) > 1:
-            logger.warning("Multiple feeds found, selecting Feed id {}".format(feeds[0].id))
+            _logger.warning(f"Multiple feeds found, selecting first one (Feed id {feeds[0].id})")
 
         elif feeds:
             feed_id = feeds[0].id
-            logger.info("Feed {} was found as Feed ID {}".format(self._config.feed_name, feed_id))
+            _logger.info(f"Feed {self._config.FEED_NAME} was found as Feed ID {feed_id}")
             feeds[0].synchronize(False)

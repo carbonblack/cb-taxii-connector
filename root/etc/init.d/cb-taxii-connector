@@ -4,8 +4,8 @@
 #
 # chkconfig:   2345 55 25
 # description: The Carbon Black taxii Connector is a Carbon Black component \
-#              that integrates with an on-premise taxii device to provide \
-#              a Carbon Black feed of taxii alerts in your environment.
+#              that integrates with one or more STIX/TAXII 2.1 servers device to provide \
+#              a Carbon Black feed of STIX indicators in your environment.
 
 # Source function library.
 . /etc/rc.d/init.d/functions

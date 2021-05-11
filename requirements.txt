@@ -5,10 +5,11 @@ flask==0.12.4
 cbapi==1.7.1
 pyinstaller==4.2
 simplejson
-PyYAML==5.1.2
+PyYAML==5.4.1
 setuptools<45.0.0
 jinja2
 medallion
 taxii2-client
 stix2
 flask-script
+requests-mock

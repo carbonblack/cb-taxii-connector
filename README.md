@@ -1,29 +1,15 @@
-# VMware Carbon Black - ThreatConnect Connector (CentOS 6/7/8)
+# VMware Carbon Black - STIX/TAXII 2 Connector (CentOS 6/7/8)
 
-VMware Carbon Black EDR provides integration with ThreatConnect by retrieving Indicators of
-Compromise (IOCs) from specified communities. To support this integration, Carbon
-Black provides an out-of-band bridge that communicates with the ThreatConnect API.
+VMware Carbon Black EDR provides integration with STIX/TAXII version 2.0/2.1 servers.
+
+To support this integration, Carbon Black provides an out-of-band bridge that communicates with the TAXII API.
 Built with python3!
 
-## Building
-
-To create a build for EL7, run:
-```
-FISH: ./gradlew build
-BASH: ./gradlew build
-```
-
-To create a build for EL8, run:
-```
-FISH: env DOCKERIZED_BUILD_ENV=centos8 ./gradlew build
-BASH: export DOCKERIZED_BUILD_ENV=centos8; ./gradlew build
-```
-
-Other common commands for ./gradlew:
-* `runPyTest` - Runs the python test suite
-* `generatePepperReport` - Generates a flake 8 based pepper report.
-* `createVirtualEnv` - Creates the appropriate python virtual environement to build and execute the connector.  Can also be used for your IDE's virtual environment.
-* `runSmokeTest` - Runs the smoke tests available.
+The integration can be configured to retrieve STIX Indicators from a number of specified TAXII 2.0/2.1 servers.
+The integration will query the configured servers for SIX indicators, and then translate STIX-pattern indicators 
+into EDR IOC format where possible to the produced a consolidated EDR threat intelligence feed.
+MD5/Sha256 hashes, IP addresses and domain names included in the available STIX Indicators patterns will be included,
+other indicators will be ignored.
 
 ## Installation Quickstart
 
@@ -31,37 +17,47 @@ As root on your EDR or other RPM based 64-bit Linux distribution server:
 ```
 cd /etc/yum.repos.d
 curl -O https://opensource.carbonblack.com/release/x86_64/CbOpenSource.repo
-yum install python-cb-threatconnect-connector
+yum install python-cb-taxii-connector
 ```
 
 Once the software is installed via YUM, copy the 
-`/etc/cb/integrations/threatconnect/connector.conf.example` file to 
-`/etc/cb/integrations/threatconnect/connector.conf`.
+`/etc/cb/integrations/taxii/connector.conf.example` file to 
+`/etc/cb/integrations/taxii/connector.conf`.
  Edit this file and place your EDR API key into the 
 `carbonblack_server_token` variable and your EDR server's base URL into the `carbonblack_server_url` variable.
 
-Next, place the credentials for your ThreatConnect API account into the `api_key` and `secret_key` variables. The 
-`api_key` variable is the numeric API identifier issued by ThreatConnect, and the `secret_key` is a long alphanumeric +
-symbols secret key assigned to you. Any special characters in the secret key do not have to be escaped in the
-configuration file.
+Define a new section in the ini file for each Taxii server you wish to download STIX Indicators.
+`url=` is required, and must be set to the protocol prefixed url of the server
+`version=` is optional, and controls the TAXII version of the target server (v20 or v21)
+`score=` can be provided to score the retrieved indicators (1-100), with the default being 75
 
-To receive IOCs from your organization as a source, enter your organization's source name in `default_org`.
+By default the integration will pull from all available collections, but you can specify
+`collections=` and indicate a comma delimited list of collection-ids to limit the integration's scope
 
-To specify which sources to pull from, enter your sources as a comma separated list in `sources` or `*` to pull from all
-sources.
+By default, the ingegration will pull all MD5/SHA256 hashes, all ip address and domain name indicators
+You can specify which types of indicator in the server's section of the configuration to limit the types of indicators
+`ioc_types=` (hash,domain,address) as a comma delimited list to 
 
-Once you have the connector configured for your API access, start the ThreatConnect service:
+Two forms of authentication username and password or token authentication can be configured, optionally:
+`username=` and `password=` can be set for the former and `token` for the later. 
+`cert=` can be optionally provided to locate a .pem encoded certificate+key pair to use during TLS 
+or set to a comma delimited list of the certificate file location followed by the key.
+`verify=` can be optionally set to control TLS verification using `true` or `false` as boolean values.
+
+Once you have the connector configured with the desired TAXII servers:
 ```
-service cb-threatconnect-connector start
+service cb-taxii-connector start
 ```
 
-Any errors will be logged into `/var/log/cb/integrations/cb-threatconnect-connector/cb-threatconnect-connector.log`.
+Any errors will be logged into `/var/log/cb/integrations/cb-taxii-connector/cb-taxii-connector.log`.  
 
 ## Troubleshooting
 
-If you suspect a problem, please first look at the ThreatConnect connector logs found here: 
-`/var/log/cb/integrations/cb-threatconnect-connector/cb-threatconnect-connector.log`
+If you suspect a problem, please first look at the Taxii connector logs found here: 
+`/var/log/cb/integrations/cb-taxii-connector/cb-taxii-connector.log`
 (There might be multiple files as the logger "rolls over" when the log file hits a certain size).
+
+If you need detail logging, set `log_level=DEBUG` in the core configuration.
 
 ## Support
 
@@ -79,3 +75,24 @@ When you contact Carbon Black Support with an issue, please provide the followin
 * For documentation issues, specify the version of the manual you are using. 
 * Action causing the problem, error message returned, and event log output (as appropriate) 
 * Problem severity
+
+## Building
+
+To create a build for EL7, run:
+```
+FISH: ./gradlew build
+BASH: ./gradlew build
+```
+
+To create a build for EL8, run:
+```
+FISH: env DOCKERIZED_BUILD_ENV=centos8 ./gradlew build
+BASH: export DOCKERIZED_BUILD_ENV=centos8; ./gradlew build
+```
+
+
+Other common commands for ./gradlew:
+* `runPyTest` - Runs the python test suite
+* `generatePepperReport` - Generates a flake 8 based pepper report.
+* `createVirtualEnv` - Creates the appropriate python virtual environment to build and execute the connector.  Can also be used for your IDE's virtual environment.
+* `runSmokeTest` - Runs the smoke tests available.

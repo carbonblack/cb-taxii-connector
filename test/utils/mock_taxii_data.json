@@ -1,310 +1,711 @@
 {
-    "/discovery": {
-        "title": "Some TAXII Server",
-        "description": "This TAXII Server contains a listing of",
-        "contact": "string containing contact information",
-        "default": "http://localhost:5000/trustgroup1/",
-        "api_roots": [
-            "http://localhost:5000/api1/",
-            "http://localhost:5000/api2/",
-            "http://localhost:5000/trustgroup1/"
-        ]
+  "/discovery": {
+    "title": "Some TAXII Server",
+    "description": "This TAXII Server contains a listing of",
+    "contact": "string containing contact information",
+    "default": "http://localhost:5000/trustgroup1/",
+    "api_roots": [
+      "http://localhost:5000/api1/",
+      "http://localhost:5000/api2/",
+      "http://localhost:5000/trustgroup1/"
+    ]
+  },
+  "api1": {
+    "information": {
+      "title": "General STIX 2.1 Collections",
+      "description": "A repo for general STIX data.",
+      "versions": [
+        "application/taxii+json;version=2.1"
+      ],
+      "max_content_length": 9765625
     },
-    "api1": {
-        "information": {
-            "title": "General STIX 2.1 Collections",
-            "description": "A repo for general STIX data.",
-            "versions": [
-                "application/taxii+json;version=2.1"
-            ],
-            "max_content_length": 9765625
-        },
-        "status": [],
-        "collections": []
+    "status": [],
+    "collections": []
+  },
+  "api2": {
+    "information": {
+      "title": "STIX 2.1 Indicator Collections",
+      "description": "A repo for general STIX data.",
+      "versions": [
+        "application/taxii+json;version=2.1"
+      ],
+      "max_content_length": 9765625
     },
-    "api2": {
-        "information": {
-            "title": "STIX 2.1 Indicator Collections",
-            "description": "A repo for general STIX data.",
-            "versions": [
-                "application/taxii+json;version=2.1"
-            ],
-            "max_content_length": 9765625
-        },
-        "status": [],
-        "collections": []
+    "status": [],
+    "collections": []
+  },
+  "trustgroup1": {
+    "information": {
+      "title": "Malware Research Group",
+      "description": "A trust group setup for malware researchers",
+      "versions": [
+        "application/taxii+json;version=2.1"
+      ],
+      "max_content_length": 9765625
     },
-    "trustgroup1": {
-        "information": {
-            "title": "Malware Research Group",
-            "description": "A trust group setup for malware researchers",
-            "versions": [
-                "application/taxii+json;version=2.1"
-            ],
-            "max_content_length": 9765625
-        },
-        "status": [
-            {
-                "id": "2d086da7-4bdc-4f91-900e-d77486753710",
-                "status": "pending",
-                "request_timestamp": "2016-11-02T12:34:34.123456Z",
-                "total_count": 4,
-                "success_count": 1,
-                "successes": [
-                    {
-                        "id": "indicator--cd981c25-8042-4166-8945-51178443bdac",
-                        "version": "2014-05-08T09:00:00.000Z",
-                        "message": "Successfully added object to collection '91a7b528-80eb-42ed-a74d-c6fbd5a26116'."
-                    }
-                ],
-                "failure_count": 1,
-                "failures": [
-                    {
-                        "id": "malware--664fa29d-bf65-4f28-a667-bdb76f29ec98",
-                        "version": "2015-05-08T09:00:00.000Z",
-                        "message": "Unable to process object"
-                    }
-                ],
-                "pending_count": 2,
-                "pendings": [
-                    {
-                        "id": "indicator--252c7c11-daf2-42bd-843b-be65edca9f61",
-                        "version": "2016-08-08T09:00:00.000Z"
-                    },
-                    {
-                        "id": "relationship--045585ad-a22f-4333-af33-bfd503a683b5",
-                        "version": "2016-06-08T09:00:00.000Z"
-                    }
-                ]
-            },
-            {
-                "id": "2d086da7-4bdc-4f91-900e-f4566be4b780",
-				"status": "pending",
-				"request_timestamp": "2016-11-02T12:34:34.123456Z",
-                "total_objects": 0,
-				"success_count": 0,
-				"successes": [],
-				"failure_count": 0,
-				"failures": [],
-				"pending_count": 0,
-				"pendings": []
-            }
+    "status": [
+      {
+        "id": "2d086da7-4bdc-4f91-900e-d77486753710",
+        "status": "pending",
+        "request_timestamp": "2016-11-02T12:34:34.123456Z",
+        "total_count": 4,
+        "success_count": 1,
+        "successes": [
+          {
+            "id": "indicator--cd981c25-8042-4166-8945-51178443bdac",
+            "version": "2014-05-08T09:00:00.000Z",
+            "message": "Successfully added object to collection '91a7b528-80eb-42ed-a74d-c6fbd5a26116'."
+          }
         ],
-        "collections": [
-            {
-                "id": "472c94ae-3113-4e3e-a4dd-a9f4ac7471d4",
-                "title": "This data collection is for testing querying across collections",
-                "can_read": false,
-                "can_write": true,
-                "media_types": [
-                    "application/stix+json;version=2.1"
-                ],
-                "objects": [],
-                "manifest": []
-            },
-	    {
-                "id": "365fed99-08fa-fdcd-a1b3-fb247eb41d01",
-                "title": "This data collection is for testing adding objects",
-                "can_read": true,
-                "can_write": true,
-                "media_types": [
-                    "application/stix+json;version=2.1"
-                ],
-                "objects": [],
-                "manifest": []
-            },
-            {
-                "id": "91a7b528-80eb-42ed-a74d-c6fbd5a26116",
-                "title": "High Value Indicator Collection",
-                "description": "This data collection is for collecting high value IOCs",
-                "can_read": true,
-                "can_write": true,
-                "media_types": [
-                    "application/stix+json;version=2.0",
-                    "application/stix+json;version=2.1"
-                ],
-                "objects": [
-                    {
-                        "created": "2014-05-08T09:00:00.000Z",
-                        "modified": "2014-05-08T09:00:00.000Z",
-                        "id": "relationship--2f9a9aa9-108a-4333-83e2-4fb25add0463",
-                        "relationship_type": "indicates",
-                        "source_ref": "indicator--cd981c25-8042-4166-8945-51178443bdac",
-                        "spec_version": "2.1",
-                        "target_ref": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
-                        "type": "relationship"
-                    },
-                    {
-                        "created": "2014-05-08T09:00:00.000Z",
-                        "id": "indicator--cd981c25-8042-4166-8945-51178443bdac",
-                        "indicator_types": [
-                            "file-hash-watchlist"
-                        ],
-                        "modified": "2014-05-08T09:00:00.000Z",
-                        "name": "File hash for Poison Ivy variant",
-                        "pattern": "[file:hashes.'SHA-256' = 'ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c']",
-                        "pattern_type": "stix",
-                        "spec_version": "2.1",
-                        "type": "indicator",
-                        "valid_from": "2014-05-08T09:00:00.000000Z"
-                    },
-                    {
-                        "created": "2016-11-03T12:30:59.000Z",
-                        "description": "Accessing this url will infect your machine with malware.",
-                        "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
-                        "indicator_types": [
-                            "url-watchlist"
-                        ],
-                        "modified": "2016-11-03T12:30:59.000Z",
-                        "name": "Malicious site hosting downloader",
-                        "pattern": "[url:value = 'http://z4z10farb.cn/4712']",
-                        "pattern_type": "stix",
-                        "spec_version": "2.1",
-                        "type": "indicator",
-                        "valid_from": "2017-01-27T13:49:53.935382Z"
-                    },
-                    {
-                        "created": "2016-11-03T12:30:59.000Z",
-                        "description": "Accessing this url will infect your machine with malware. Updated indicator",
-                        "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
-                        "indicator_types": [
-                            "url-watchlist"
-                        ],
-                        "modified": "2016-12-25T12:30:59.444Z",
-                        "name": "Malicious site hosting downloader",
-                        "pattern": "[url:value = 'http://x4z9arb.cn/4712']",
-                        "pattern_type": "stix",
-                        "spec_version": "2.1",
-                        "type": "indicator",
-                        "valid_from": "2017-01-27T13:49:53.935382Z"
-                    },
-                    {
-                        "created": "2016-11-03T12:30:59.000Z",
-                        "description": "Accessing this url will infect your machine with malware. This is the last updated indicator",
-                        "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
-                        "indicator_types": [
-                            "url-watchlist"
-                        ],
-                        "modified": "2017-01-27T13:49:53.935Z",
-                        "name": "Malicious site hosting downloader",
-                        "pattern": "[url:value = 'http://x4z9arb.cn/4712']",
-                        "pattern_type": "stix",
-                        "spec_version": "2.1",
-                        "type": "indicator",
-                        "valid_from": "2016-11-03T12:30:59.000Z"
-                    },
-                    {
-                        "created": "2017-01-20T00:00:00.000Z",
-                        "definition": {
-                            "tlp": "green"
-                        },
-                        "definition_type": "tlp",
-                        "id": "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da",
-                        "name": "TLP:GREEN",
-                        "spec_version": "2.1",
-                        "type": "marking-definition"
-                    },
-                    {
-                        "created": "2017-01-27T13:49:53.997Z",
-                        "description": "Poison Ivy",
-                        "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
-                        "is_family": true,
-                        "malware_types": [
-                            "remote-access-trojan"
-                        ],
-                        "modified": "2018-02-23T18:30:00.000Z",
-                        "name": "Poison Ivy",
-                        "type": "malware"
-                    },
-                    {
-                        "created": "2017-01-27T13:49:53.997Z",
-                        "description": "Poison Ivy",
-                        "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
-                        "is_family": true,
-                        "malware_types": [
-                            "remote-access-trojan"
-                        ],
-                        "modified": "2017-01-27T13:49:53.997Z",
-                        "name": "Poison Ivy",
-                        "spec_version": "2.1",
-                        "type": "malware"
-                    }
-                ],
-                "manifest": [
-                    {
-                        "date_added": "2014-05-08T09:00:00.000000Z",
-                        "id": "relationship--2f9a9aa9-108a-4333-83e2-4fb25add0463",
-                        "media_type": "application/stix+json;version=2.1",
-                        "version": "2014-05-08T09:00:00.000Z"
-                    },
-                    {
-                        "date_added": "2016-11-01T03:04:05.000000Z",
-                        "id": "indicator--cd981c25-8042-4166-8945-51178443bdac",
-                        "media_type": "application/stix+json;version=2.1",
-                        "version": "2014-05-08T09:00:00.000Z"
-                    },
-                    {
-                        "date_added": "2016-11-03T12:30:59.001000Z",
-                        "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
-                        "media_type": "application/stix+json;version=2.1",
-                        "version": "2016-11-03T12:30:59.000Z"
-                    },
-                    {
-                        "date_added": "2016-12-27T13:49:59.000000Z",
-                        "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
-                        "media_type": "application/stix+json;version=2.1",
-                        "version": "2016-12-25T12:30:59.444Z"
-                    },
-                    {
-                        "date_added": "2017-01-20T00:00:00.000000Z",
-                        "id": "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da",
-                        "media_type": "application/stix+json;version=2.1",
-                        "version": "2017-01-20T00:00:00.000Z"
-                    },
-                    {
-                        "date_added": "2017-01-27T13:49:59.997000Z",
-                        "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
-                        "media_type": "application/stix+json;version=2.1",
-                        "version": "2017-01-27T13:49:53.997Z"
-                    },
-                    {
-                        "date_added": "2017-01-27T13:49:59.997000Z",
-                        "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
-                        "media_type": "application/stix+json;version=2.0",
-                        "version": "2018-02-23T18:30:00.000Z"
-                    },
-                    {
-                        "date_added": "2017-12-31T13:49:53.935000Z",
-                        "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
-                        "media_type": "application/stix+json;version=2.1",
-                        "version": "2017-01-27T13:49:53.935Z"
-                    }
-                ]
-            },
-            {
-                "id": "52892447-4d7e-4f70-b94d-d7f22742ff63",
-                "title": "Indicators from the past 24-hours",
-                "description": "This data collection is for collecting current IOCs",
-                "can_read": true,
-                "can_write": false,
-                "media_types": [
-                    "application/stix+json;version=2.1"
-                ],
-                "objects": [],
-                "manifest": []
-            },
-            {
-                "id": "64993447-4d7e-4f70-b94d-d7f33742ee63",
-                "title": "Secret Indicators",
-                "description": "Non accessible",
-                "can_read": false,
-                "can_write": false,
-                "media_types": [
-                    "application/stix+json;version=2.1"
-                ],
-                "objects": [],
-                "manifest": []
-            }
+        "failure_count": 1,
+        "failures": [
+          {
+            "id": "malware--664fa29d-bf65-4f28-a667-bdb76f29ec98",
+            "version": "2015-05-08T09:00:00.000Z",
+            "message": "Unable to process object"
+          }
+        ],
+        "pending_count": 2,
+        "pendings": [
+          {
+            "id": "indicator--252c7c11-daf2-42bd-843b-be65edca9f61",
+            "version": "2016-08-08T09:00:00.000Z"
+          },
+          {
+            "id": "relationship--045585ad-a22f-4333-af33-bfd503a683b5",
+            "version": "2016-06-08T09:00:00.000Z"
+          }
         ]
-    }
+      },
+      {
+        "id": "2d086da7-4bdc-4f91-900e-f4566be4b780",
+        "status": "pending",
+        "request_timestamp": "2016-11-02T12:34:34.123456Z",
+        "total_objects": 0,
+        "success_count": 0,
+        "successes": [],
+        "failure_count": 0,
+        "failures": [],
+        "pending_count": 0,
+        "pendings": []
+      }
+    ],
+    "collections": [
+      {
+        "id": "472c94ae-3113-4e3e-a4dd-a9f4ac7471d4",
+        "title": "This data collection is for testing querying across collections",
+        "can_read": false,
+        "can_write": true,
+        "media_types": [
+          "application/stix+json;version=2.1"
+        ],
+        "objects": [],
+        "manifest": []
+      },
+      {
+        "id": "365fed99-08fa-fdcd-a1b3-fb247eb41d01",
+        "title": "This data collection is for testing adding objects",
+        "can_read": true,
+        "can_write": true,
+        "media_types": [
+          "application/stix+json;version=2.1"
+        ],
+        "objects": [],
+        "manifest": []
+      },
+      {
+        "id": "91a7b528-80eb-42ed-a74d-c6fbd5a26116",
+        "title": "High Value Indicator Collection",
+        "description": "This data collection is for collecting high value IOCs",
+        "can_read": true,
+        "can_write": true,
+        "media_types": [
+          "application/stix+json;version=2.0",
+          "application/stix+json;version=2.1"
+        ],
+        "objects": [
+          {
+            "created": "2014-05-08T09:00:00.000Z",
+            "modified": "2014-05-08T09:00:00.000Z",
+            "id": "relationship--2f9a9aa9-108a-4333-83e2-4fb25add0463",
+            "relationship_type": "indicates",
+            "source_ref": "indicator--cd981c25-8042-4166-8945-51178443bdac",
+            "spec_version": "2.1",
+            "target_ref": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
+            "type": "relationship"
+          },
+          {
+            "created": "2014-05-08T09:00:00.000Z",
+            "id": "indicator--cd981c25-8042-4166-8945-51178443bdac",
+            "indicator_types": [
+              "file-hash-watchlist"
+            ],
+            "modified": "2014-05-08T09:00:00.000Z",
+            "name": "File hash for Poison Ivy variant",
+            "pattern": "[file:hashes.'SHA-256' = 'ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c']",
+            "pattern_type": "stix",
+            "spec_version": "2.1",
+            "type": "indicator",
+            "valid_from": "2014-05-08T09:00:00.000000Z"
+          },
+          {
+            "created": "2016-11-03T12:30:59.000Z",
+            "description": "Accessing this url will infect your machine with malware.",
+            "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
+            "indicator_types": [
+              "url-watchlist"
+            ],
+            "modified": "2016-11-03T12:30:59.000Z",
+            "name": "Malicious site hosting downloader",
+            "pattern": "[url:value = 'http://z4z10farb.cn/4712']",
+            "pattern_type": "stix",
+            "spec_version": "2.1",
+            "type": "indicator",
+            "valid_from": "2017-01-27T13:49:53.935382Z"
+          },
+          {
+            "created": "2016-11-03T12:30:59.000Z",
+            "description": "Accessing this url will infect your machine with malware. Updated indicator",
+            "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
+            "indicator_types": [
+              "url-watchlist"
+            ],
+            "modified": "2016-12-25T12:30:59.444Z",
+            "name": "Malicious site hosting downloader",
+            "pattern": "[url:value = 'http://x4z9arb.cn/4712']",
+            "pattern_type": "stix",
+            "spec_version": "2.1",
+            "type": "indicator",
+            "valid_from": "2017-01-27T13:49:53.935382Z"
+          },
+          {
+            "created": "2016-11-03T12:30:59.000Z",
+            "description": "Accessing this url will infect your machine with malware. This is the last updated indicator",
+            "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
+            "indicator_types": [
+              "url-watchlist"
+            ],
+            "modified": "2017-01-27T13:49:53.935Z",
+            "name": "Malicious site hosting downloader",
+            "pattern": "[url:value = 'http://x4z9arb.cn/4712']",
+            "pattern_type": "stix",
+            "spec_version": "2.1",
+            "type": "indicator",
+            "valid_from": "2016-11-03T12:30:59.000Z"
+          },
+          {
+            "created": "2017-01-20T00:00:00.000Z",
+            "definition": {
+              "tlp": "green"
+            },
+            "definition_type": "tlp",
+            "id": "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da",
+            "name": "TLP:GREEN",
+            "spec_version": "2.1",
+            "type": "marking-definition"
+          },
+          {
+            "created": "2017-01-27T13:49:53.997Z",
+            "description": "Poison Ivy",
+            "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
+            "is_family": true,
+            "malware_types": [
+              "remote-access-trojan"
+            ],
+            "modified": "2018-02-23T18:30:00.000Z",
+            "name": "Poison Ivy",
+            "type": "malware"
+          },
+          {
+            "created": "2017-01-27T13:49:53.997Z",
+            "description": "Poison Ivy",
+            "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
+            "is_family": true,
+            "malware_types": [
+              "remote-access-trojan"
+            ],
+            "modified": "2017-01-27T13:49:53.997Z",
+            "name": "Poison Ivy",
+            "spec_version": "2.1",
+            "type": "malware"
+          }
+        ],
+        "manifest": [
+          {
+            "date_added": "2014-05-08T09:00:00.000000Z",
+            "id": "relationship--2f9a9aa9-108a-4333-83e2-4fb25add0463",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2014-05-08T09:00:00.000Z"
+          },
+          {
+            "date_added": "2016-11-01T03:04:05.000000Z",
+            "id": "indicator--cd981c25-8042-4166-8945-51178443bdac",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2014-05-08T09:00:00.000Z"
+          },
+          {
+            "date_added": "2016-11-03T12:30:59.001000Z",
+            "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2016-11-03T12:30:59.000Z"
+          },
+          {
+            "date_added": "2016-12-27T13:49:59.000000Z",
+            "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2016-12-25T12:30:59.444Z"
+          },
+          {
+            "date_added": "2017-01-20T00:00:00.000000Z",
+            "id": "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2017-01-20T00:00:00.000Z"
+          },
+          {
+            "date_added": "2017-01-27T13:49:59.997000Z",
+            "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2017-01-27T13:49:53.997Z"
+          },
+          {
+            "date_added": "2017-01-27T13:49:59.997000Z",
+            "id": "malware--c0931cc6-c75e-47e5-9036-78fabc95d4ec",
+            "media_type": "application/stix+json;version=2.0",
+            "version": "2018-02-23T18:30:00.000Z"
+          },
+          {
+            "date_added": "2017-12-31T13:49:53.935000Z",
+            "id": "indicator--6770298f-0fd8-471a-ab8c-1c658a46574e",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2017-01-27T13:49:53.935Z"
+          }
+        ]
+      },
+      {
+        "id": "52892447-4d7e-4f70-b94d-d7f22742ff63",
+        "title": "Indicators from the past 24-hours",
+        "description": "This data collection is for collecting current IOCs",
+        "can_read": true,
+        "can_write": false,
+        "media_types": [
+          "application/stix+json;version=2.1"
+        ],
+        "objects": [
+          {
+            "created": "2022-02-18T05:57:42Z",
+            "modified": "2022-11-21T23:46:55Z",
+            "spec_version": "2.1",
+            "confidence": 93,
+            "pattern_type": "stix",
+            "pattern": "([process:defanged = false OR (domain-name:defanged = false)] FOLLOWEDBY [url:defanged = false] FOLLOWEDBY (((([x509-certificate:defanged = false] OR [software:name > 'gwONSkVS'])))))",
+            "type": "indicator",
+            "pattern_version": "2.1",
+            "id": "indicator--9c73940b-b115-43e7-994c-e2253124ceb1",
+            "valid_until": "2021-12-23T02:51:35Z",
+            "valid_from": "2021-10-03T15:40:17Z"
+          },
+          {
+            "created": "2020-12-23T00:33:23Z",
+            "modified": "2021-09-08T11:58:40Z",
+            "labels": [
+              "father"
+            ],
+            "spec_version": "2.1",
+            "kill_chain_phases": [
+              {
+                "phase_name": "delivery",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              },
+              {
+                "phase_name": "mozbZy",
+                "kill_chain_name": "rCPtd"
+              },
+              {
+                "phase_name": "exploitation",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              },
+              {
+                "phase_name": "delivery",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              }
+            ],
+            "pattern_type": "stix",
+            "pattern": "(([directory:path < '/feeling/in.flac'] FOLLOWEDBY [file:name > 'recognize.avi'] WITHIN 3 SECONDS)) OR [mutex:defanged NOT = false OR (email-addr:value > 'derekweeks@king-johnson.com')] OR [ipv6-addr:defanged NOT = false]",
+            "type": "indicator",
+            "id": "indicator--1cc6530b-1e6b-4f72-8e64-a19b00f09f63",
+            "valid_from": "2021-07-26T06:10:53Z"
+          },
+          {
+            "modified": "2020-05-22T23:08:04Z",
+            "spec_version": "2.1",
+            "created": "2019-12-07T21:14:02Z",
+            "created_by_ref": "identity--2e25eb13-32d6-4076-b667-87718d9d1e73",
+            "lang": "en",
+            "kill_chain_phases": [
+              {
+                "phase_name": "installation",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              },
+              {
+                "phase_name": "kZOstwuzMMNZvOxb",
+                "kill_chain_name": "SLQcRN"
+              }
+            ],
+            "pattern_type": "stix",
+            "pattern": "[software:defanged = false]",
+            "type": "indicator",
+            "id": "indicator--166f6274-402e-4648-8924-89a611067cc5",
+            "valid_from": "2021-02-06T17:59:17Z"
+          },
+          {
+            "created": "2022-04-06T09:51:05Z",
+            "modified": "2022-10-23T15:57:25Z",
+            "spec_version": "2.1",
+            "confidence": 30,
+            "pattern_type": "stix",
+            "pattern": "(([email-addr:defanged = false]) OR [email-addr:defanged NOT = false AND (email-addr:value NOT = 'patriciaweaver@gmail.com')])",
+            "type": "indicator",
+            "id": "indicator--56f4b227-7692-4595-98d0-f5ae24de0296",
+            "description": "Task off care camera majority vote.",
+            "valid_from": "2021-10-30T00:11:57Z"
+          },
+          {
+            "confidence": 81,
+            "modified": "2022-04-21T10:50:01Z",
+            "spec_version": "2.1",
+            "created": "2021-12-22T09:02:08Z",
+            "labels": [
+              "without",
+              "officer",
+              "international"
+            ],
+            "lang": "en",
+            "kill_chain_phases": [
+              {
+                "phase_name": "actions on objective",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              }
+            ],
+            "pattern_type": "stix",
+            "pattern": "([ipv6-addr:value NOT = '6007:af84:81:89f4:678b:a163:daf5:9771'] OR ([autonomous-system:defanged = false] OR [url:defanged NOT = false] OR [directory:contains_refs[0].path >= '/letter/model.flac']) START t'2021-10-17T16:32:12.939316Z' STOP t'2022-05-01T19:56:06.93565Z')",
+            "type": "indicator",
+            "id": "indicator--04c97ddb-5b95-4e65-8ae8-3c9af1c658a9",
+            "name": "I",
+            "valid_from": "2021-09-11T13:48:40Z"
+          },
+          {
+            "modified": "2020-10-07T15:08:23Z",
+            "spec_version": "2.1",
+            "labels": [
+              "soldier"
+            ],
+            "created": "2020-04-30T12:07:03Z",
+            "external_references": [
+              {
+                "hashes": {
+                  "MD5": "70d4c1b188dc9a00e3fa41fdb768eb46",
+                  "SHA-256": "9a87c375352b154e838e1f44bf8d8914cb89bcd88183278ffb93b5c8f137ec0e",
+                  "SHA-1": "951e52d5508de25c31dfacf8fb14a9cb08379ee5",
+                  "SHA3-256": "4a2f7ce6d816307e7d192cff9a940adab5ec380d1522ef64500bcd7bb4566e97"
+                },
+                "source_name": "appear",
+                "external_id": "wkqVlGD"
+              }
+            ],
+            "kill_chain_phases": [
+              {
+                "phase_name": "EgwRc",
+                "kill_chain_name": "kPpWIlTPoRfhE"
+              },
+              {
+                "phase_name": "rLWlIvOZ",
+                "kill_chain_name": "ajMDBwX"
+              },
+              {
+                "phase_name": "weaponization",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              },
+              {
+                "phase_name": "reconnaissance",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              }
+            ],
+            "pattern_type": "stix",
+            "pattern": "[mac-addr:value = 'aa:fe:7a:6d:c3:d4'] AND ([url:defanged = false]) REPEATS 1 TIMES",
+            "type": "indicator",
+            "id": "indicator--69c1c6d4-6c9f-4c00-89ba-d73e9d4b8997",
+            "valid_until": "2021-04-18T13:30:00Z",
+            "valid_from": "2020-10-16T13:45:33Z"
+          },
+          {
+            "created": "2022-02-14T15:02:04Z",
+            "modified": "2022-08-24T09:31:37Z",
+            "labels": [
+              "me",
+              "reduce"
+            ],
+            "spec_version": "2.1",
+            "pattern_type": "stix",
+            "pattern": "([directory:defanged = false]) AND [directory:path NOT = '/bring/ground.mov'] AND [domain-name:value < 'smith.info' OR (email-message:defanged = false)] AND [process:defanged = false] WITHIN 9 SECONDS",
+            "type": "indicator",
+            "id": "indicator--c171d401-8fa2-4e1c-a644-916054700314",
+            "name": "born",
+            "valid_from": "2020-10-25T04:35:45Z"
+          },
+          {
+            "lang": "en",
+            "modified": "2021-01-04T04:02:12Z",
+            "spec_version": "2.1",
+            "created": "2020-08-02T12:34:54Z",
+            "pattern_type": "stix",
+            "pattern": "([email-message:cc_refs[*].value >= 'kdavidson@yahoo.com'] AND [process:child_refs[0].opened_connection_refs[2].src_ref.defanged = false] AND ([windows-registry-key:key >= 'InEXObvkLjIdp'])) AND [artifact:url NOT = 'http://mckinney-smith.com/'] AND [network-traffic:src_ref.defanged NOT = false]",
+            "type": "indicator",
+            "indicator_types": [
+              "unknown",
+              "benign",
+              "unknown",
+              "anonymization",
+              "anomalous-activity"
+            ],
+            "id": "indicator--84fb7fbc-171e-4946-848d-e2eba27b3e8b",
+            "valid_from": "2020-10-26T08:02:06Z"
+          },
+          {
+            "confidence": 88,
+            "modified": "2022-01-30T01:51:22Z",
+            "object_marking_refs": [
+              "marking-definition--867abc43-becb-4dc5-9414-2ec6a010f0cb",
+              "marking-definition--8b0b4d19-9966-444d-a5cb-b64c8df3ea81",
+              "marking-definition--7fbbcd4d-79ba-492b-94e3-5d4b3ce04b8b"
+            ],
+            "spec_version": "2.1",
+            "created_by_ref": "identity--df925c83-c1e6-427e-b164-a57a0aa43946",
+            "created": "2021-06-11T14:05:59Z",
+            "external_references": [
+              {
+                "source_name": "election",
+                "external_id": "xAjgcwHruAQxSZyW",
+                "description": "Voice where cost yeah debate."
+              }
+            ],
+            "pattern_type": "stix",
+            "pattern": "[software:defanged NOT = false] AND [autonomous-system:defanged = false]",
+            "type": "indicator",
+            "id": "indicator--11ff2e82-6694-43a4-bcd7-8db0afd74c97",
+            "valid_from": "2021-04-19T20:11:52Z"
+          },
+          {
+            "modified": "2022-03-20T11:35:53Z",
+            "object_marking_refs": [
+              "marking-definition--c7cd2128-0315-4a80-8d86-10525c4db552"
+            ],
+            "spec_version": "2.1",
+            "created": "2021-06-16T11:11:27Z",
+            "lang": "en",
+            "external_references": [
+              {
+                "source_name": "good",
+                "external_id": "sDxSciGxaQLijCZ"
+              },
+              {
+                "hashes": {
+                  "MD5": "e9008352ee9b9afcdf020e485d5d0781",
+                  "SHA-256": "0dc5d8e75df4695b7096b192c788b94d50bb195a43a8ca67856551cc60088839",
+                  "SHA-512": "568df34829202b34a03b84375f77845d8dc54ead16d57ccae8770f19097053db78a64cab6e8b68a86c9adc715b7d4a7f58e5cd2c26d1780968944b173962e642"
+                },
+                "source_name": "good",
+                "url": "https://www.baker-aguirre.com/"
+              },
+              {
+                "source_name": "question",
+                "description": "Traditional outside begin would good very tax."
+              },
+              {
+                "source_name": "four",
+                "url": "http://www.santos.com/"
+              }
+            ],
+            "kill_chain_phases": [
+              {
+                "phase_name": "wdOGQuETiRRZFvVdvt",
+                "kill_chain_name": "dMuNindiaxtJVU"
+              }
+            ],
+            "pattern_type": "stix",
+            "pattern": "([x509-certificate:validity_not_after <= t'2020-07-17T16:58:36Z']) FOLLOWEDBY [software:defanged NOT = false AND (software:name >= 'SDwekKI')]",
+            "type": "indicator",
+            "pattern_version": "2.1",
+            "id": "indicator--9e4c688e-c1f0-40f3-beab-c84e3b63563c",
+            "valid_until": "2020-07-30T20:32:04Z",
+            "name": "your",
+            "valid_from": "2019-12-23T18:14:29Z"
+          },
+          {
+            "created": "2020-08-22T06:49:05Z",
+            "modified": "2020-08-29T16:48:57Z",
+            "spec_version": "2.1",
+            "kill_chain_phases": [
+              {
+                "phase_name": "zULutgIHHixioseCJfuY",
+                "kill_chain_name": "kgJdFyLFcOuEeri"
+              },
+              {
+                "phase_name": "exploitation",
+                "kill_chain_name": "lockheed-martin-cyber-kill-chain"
+              },
+              {
+                "phase_name": "NqyoSGXcfPBGXQN",
+                "kill_chain_name": "eNqHjUJ"
+              },
+              {
+                "phase_name": "GFwtebsPxjlx",
+                "kill_chain_name": "vPgUJNI"
+              },
+              {
+                "phase_name": "zBfHpORRbky",
+                "kill_chain_name": "oIsbittspDQ"
+              }
+            ],
+            "pattern_type": "stix",
+            "pattern": "([mac-addr:value > '0f:89:79:42:07:f8']) AND [mutex:defanged = false] AND [(user-account:user_id < 'lisa90') OR url:defanged = false] AND [email-message:defanged = false]",
+            "type": "indicator",
+            "id": "indicator--a4bf9640-03cd-47f3-9fcb-cfa0191269d4",
+            "description": "Decade song ever discuss available.",
+            "name": "someone",
+            "valid_from": "2021-05-17T05:23:39Z"
+          },
+          {
+            "confidence": 7,
+            "modified": "2022-03-30T03:14:24Z",
+            "spec_version": "2.1",
+            "labels": [
+              "easy",
+              "music",
+              "measure",
+              "draw",
+              "edge"
+            ],
+            "created": "2021-06-04T20:58:38Z",
+            "pattern_type": "stix",
+            "pattern": "([file:name <= 'establish.wav']) FOLLOWEDBY [artifact:hashes.'SHA3-512' NOT = '695f0ea89a5519dd35b434972803106344d7415f278598215681fb6858eae93e7bd52c595bea6191a8fd3ef7e191c0a504956a7722e36dc629df397c63ccb3ee'] REPEATS 7 TIMES",
+            "type": "indicator",
+            "pattern_version": "2.1",
+            "indicator_types": [
+              "anonymization"
+            ],
+            "id": "indicator--8a5a8715-4a90-4b55-9aed-409759eef306",
+            "valid_until": "2022-02-02T13:34:57Z",
+            "valid_from": "2022-01-06T04:06:35Z"
+          },
+          {
+            "type": "indicator",
+            "spec_version": "2.1",
+            "id": "indicator--d81f86b9-975b-4c0b-875e-810c5ad45a4f",
+            "created": "2014-06-29T13:49:37.079Z",
+            "modified": "2014-06-29T13:49:37.079Z",
+            "name": "Malicious site hosting downloader",
+            "description": "This organized threat actor group operates to create profit from all types of crime.",
+            "indicator_types": [
+              "malicious-activity"
+            ],
+            "pattern": "[ipv4-addr:value = '198.51.100.1/32' OR ipv4-addr:value = '203.0.113.33/32' OR ipv6-addr:value = '2001:0db8:dead:beef:dead:beef:dead:0001/128' OR domain-name:value = 'example.com']",
+            "pattern_type": "stix",
+            "valid_from": "2014-06-29T13:49:37.079Z"
+          }
+        ],
+        "manifest": [
+          {
+            "date_added": "2022-11-21T23:46:55Z",
+            "id": "indicator--9c73940b-b115-43e7-994c-e2253124ceb1",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2022-11-21T23:46:55Z"
+          },
+          {
+            "date_added": "2021-09-08T11:58:40Z",
+            "id": "indicator--1cc6530b-1e6b-4f72-8e64-a19b00f09f63",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2021-09-08T11:58:40Z"
+          },
+          {
+            "date_added": "2020-05-22T23:08:04Z",
+            "id": "indicator--166f6274-402e-4648-8924-89a611067cc5",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2020-05-22T23:08:04Z"
+          },
+          {
+            "date_added": "2022-10-23T15:57:25Z",
+            "id": "indicator--56f4b227-7692-4595-98d0-f5ae24de0296",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2022-10-23T15:57:25Z"
+          },
+          {
+            "date_added": "2022-04-21T10:50:01Z",
+            "id": "indicator--04c97ddb-5b95-4e65-8ae8-3c9af1c658a9",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2022-04-21T10:50:01Z"
+          },
+          {
+            "date_added": "2020-10-07T15:08:23Z",
+            "id": "indicator--69c1c6d4-6c9f-4c00-89ba-d73e9d4b8997",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2020-10-07T15:08:23Z"
+          },
+          {
+            "date_added": "2022-08-24T09:31:37Z",
+            "id": "indicator--c171d401-8fa2-4e1c-a644-916054700314",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2022-08-24T09:31:37Z"
+          },
+          {
+            "date_added": "2021-01-04T04:02:12Z",
+            "id": "indicator--84fb7fbc-171e-4946-848d-e2eba27b3e8b",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2021-01-04T04:02:12Z"
+          },
+          {
+            "date_added": "2022-01-30T01:51:22Z",
+            "id": "indicator--11ff2e82-6694-43a4-bcd7-8db0afd74c97",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2022-01-30T01:51:22Z"
+          },
+          {
+            "date_added": "2022-03-20T11:35:53Z",
+            "id": "indicator--9e4c688e-c1f0-40f3-beab-c84e3b63563c",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2022-03-20T11:35:53Z"
+          },
+          {
+            "date_added": "2020-08-29T16:48:57Z",
+            "id": "indicator--a4bf9640-03cd-47f3-9fcb-cfa0191269d4",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2020-08-29T16:48:57Z"
+          },
+          {
+            "date_added": "2022-03-30T03:14:24Z",
+            "id": "indicator--8a5a8715-4a90-4b55-9aed-409759eef306",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2022-03-30T03:14:24Z"
+          },
+          {
+            "date_added": "2014-06-29T13:49:37.079Z",
+            "id": "indicator--d81f86b9-975b-4c0b-875e-810c5ad45a4f",
+            "media_type": "application/stix+json;version=2.1",
+            "version": "2014-06-29T13:49:37.079Z"
+          }
+        ]
+      },
+      {
+        "id": "64993447-4d7e-4f70-b94d-d7f33742ee63",
+        "title": "Secret Indicators",
+        "description": "Non accessible",
+        "can_read": false,
+        "can_write": false,
+        "media_types": [
+          "application/stix+json;version=2.1"
+        ],
+        "objects": [],
+        "manifest": []
+      }
+    ]
+  }
 }

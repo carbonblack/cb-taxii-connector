@@ -1,153 +1,127 @@
-import json
-import logging
-from datetime import datetime
-from itertools import chain
-from urllib.parse import urlparse
+# coding: utf-8
+# Copyright © 2014-2020 VMware, Inc. All Rights Reserved.
+################################################################################
 
-from stix2patterns.pattern import Pattern
-from stix2patterns.v21.grammars.STIXPatternListener import STIXPatternListener
-from taxii2client.common import TokenAuth
-from taxii2client.v21 import Server, as_pages
+import logging
+from itertools import chain
+from typing import Dict, List
+
+from taxii2client.v21 import as_pages
+
+from cbopensource.driver.taxii_parser import STIXIndicator, STIXPatternParser
+from cbopensource.driver.taxii_server_config import ServerVersion
 
 logger = logging.getLogger(__name__)
 
 
-class IOCPatternParser(STIXPatternListener):
-    SUPPORTED_OBJECT_PATHS = {"ipv4-addr:value": "ipv4", "ipv6-addr:value": "ipv6", "file:hashes.'SHA-256'": "sha256",
-                              "file:hashes.'MD5'": "md5", 'url:value': "dns"}
-
-    def __init__(self):
-        self._iocs = {}
-
-    def enterPropTestEqual(self, ctx):
-        logger.debug(ctx.getText())
-        parts = [child.getText() for child in ctx.getChildren()]
-        if parts and parts[0] in IOCPatternParser.SUPPORTED_OBJECT_PATHS:
-            self._add_parts_to_iocs(parts)
-
-    def _add_parts_to_iocs(self, parts):
-        ioc_key = IOCPatternParser.SUPPORTED_OBJECT_PATHS[parts[0]]
-        ioc_value = parts[2][1:-2] if ioc_key != "dns" else urlparse(parts[2][1:-2]).netloc
-        self._add_ioc(ioc_key, ioc_value)
-
-    def _add_ioc(self, key, value):
-        if key in self._iocs:
-            self._iocs[key].add(value)
-        else:
-            self._iocs[key] = {value}
-
-    @property
-    def iocs(self):
-        return self._iocs
-
-
-# [{'created': '2014-05-08T09:00:00.000Z', 'id': 'indicator--cd981c25-8042-4166-8945-51178443bdac', 'indicator_types': ['file-hash-watchlist'], 'modified': '2014-05-08T09:00:00.000Z', 'name': 'File hash for Poison Ivy variant', 'pattern': "[file:hashes.'SHA-256' = 'ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c']", 'pattern_type': 'stix', 'spec_version': '2.1', 'type': 'indicator', 'valid_from': '2014-05-08T09:00:00.000000Z'},
-class TaxiiIndicator(object):
-    _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
-
-    def __init__(self, obj, collection_url, default_score=100):
-        self._id = obj['id']
-        self._description = obj.get("description", "")
-        self._created = datetime.strptime(obj['created'], TaxiiIndicator._TIMESTAMP_FORMAT)
-        self._pattern = Pattern(obj["pattern"])
-        self._name = obj['name']
-        self.score = default_score
-        self.url = collection_url + "objects/" + self.id
-        self._report = None
-
-    @property
-    def report(self):
-        if not self._report:
-            self._report = self._create_threat_report()
-        return self._report
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def description(self):
-        return self._description
-
-    @property
-    def created(self):
-        return self._created
-
-    @property
-    def pattern(self):
-        return self._pattern
-
-    def _create_threat_report(self):
-        """
-        {
-            "timestamp": 1380773388,
-            "iocs": {
-                "ipv4": [
-                    "100.2.142.8"
-                ]
-            },
-            "link": "https://www.dan.me.uk/tornodes",
-            "id": "TOR-Node-100.2.142.8",
-            "title": "As of Wed Oct  2 20:09:48 2013 GMT, 100.2.142.8 has been a TOR exit for 26 days, 0:44:42. Contact: Adam Langley <agl@imperialviolet.org>",
-            "score": 50
-        },
-        """
-        ioc_listener = IOCPatternParser()
-        self.pattern.walk(ioc_listener)
-        report = {"timestamp": int(self.created.timestamp()), "id": self.id, "title": self.name,
-                  "iocs": ioc_listener.iocs, "score": self.score, "link": self.url}
-        return report
-
-
-class TaxiiConfigurationException(Exception):
-    def __init__(self, msg):
-        super(TaxiiConfigurationException).__init__(msg)
-
-
 class TaxiiIndicatorCollection(object):
-    def __init__(self, base_collection, score):
+    """
+    This class manages the how we deal with TAXII information.
+    """
+
+    def __init__(self, base_collection, score: int, parser: STIXPatternParser = None, pagination: int = 10):
+        """
+        Initialize the class.
+
+        :param base_collection: TODO: type and/or describe
+        :param score: the feed score
+        :param parser: STIX pattern parser to use (or derivative)
+        :param pagination: feeds per page
+        """
         self._base_collection = base_collection
         self._score = score
+        self._pagination = pagination
+        self._parser = parser if parser else STIXPatternParser()
 
     def __getattr__(self, item):
         return self._base_collection.__getattribute__(item)
 
-    def _paginated_indicator_request(self, pagination=10, added_after=None):
-        if added_after:
-            as_pages(self.get_objects, per_request=pagination, type=['indicator'], added_after=added_after)
-        return as_pages(self.get_objects, per_request=pagination, type=['indicator'])
+    # ----------------------------------------------------------------------
 
-    def stream_indicators(self, added_after=None, pagination=10):
-        for page in self._paginated_indicator_request(pagination, added_after):
+    def _paginated_indicator_request(self, added_after=None):
+        """
+        Internal method to get reports.
+
+        :param added_after:
+        :return:
+        """
+        if added_after:
+            as_pages(self.get_objects, per_request=self._pagination, type=['indicator'], added_after=added_after)
+        return as_pages(self.get_objects, per_request=self._pagination, type=['indicator'])
+
+    # ----------------------------------------------------------------------
+
+    def stream_indicators(self, added_after=None):
+        for page in self._paginated_indicator_request(added_after):
             if page and 'objects' in page:
                 for obj in page['objects']:
-                    yield TaxiiIndicator(obj, default_score=self._score, collection_url=self.url).report
+                    if has_stix_pattern_type(obj):
+                        try:
+                            report = STIXIndicator(obj, default_score=self._score, collection_url=self.url,
+                                                   pattern_parser=self._parser).report
+                            if report:
+                                yield report
+                        except Exception as ex:
+                            logger.debug(f"Error parsing STIX indicator: {ex}")
+
+
+def has_stix_pattern_type(obj: Dict) -> bool:
+    """
+    Determine if this has a stix pattern.
+
+    :param obj:
+    :return: True if stix pattern type and pattern exists
+    """
+    return obj.get("pattern_type", "stix") == "stix" and obj.get("pattern", None) is not None
 
 
 class TaxiiServer(object):
-    def __init__(self, server_config, default_score=50, pagination_count=10):
-        server_kwargs = {}
-        if "token" in server_config:
-            server_kwargs["auth"] = TokenAuth(server_config["token"])
-        elif 'username' in server_config and 'password' in server_config:
-            server_kwargs["user"] = server_config["username"]
-            server_kwargs['password'] = server_config["password"]
-        if 'url' in server_config:
-            server_kwargs["url"] = server_config["url"]
-        else:
-            raise TaxiiConfigurationException("Must provide url for each server")
-        self._score = server_config['score'] if 'score' in server_config else default_score
-        self._pagination_count = pagination_count
-        self._server = Server(**server_kwargs)
+
+    def __init__(self, ioc_types=None, score: int = 50, pagination: int = 100, collections=None, version: int = None,
+                 **kwargs):
+        """
+        Initialize the class.
+
+        :param ioc_types:
+        :param score: feed score to use
+        :param pagination: feed pagination
+        :param collections: list of collections
+        :param version: server version to use
+        :param kwargs: other optional parameters
+        """
+        self._score = score
+        self._pagination_count = pagination
+        self._server = ServerVersion.get_server_for_version(version)(**kwargs)
+        self._collection_ids = {collection: True for collection in collections} if collections is not None else {}
         self._collections = None
+        self._ioc_types = ioc_types
+
+    @staticmethod
+    def get_server_from_conf(config: dict) -> 'TaxiiServer':
+        """
+        Return a TaxiiServer object based on th supplied server configuration.
+
+        :param config: server config in Dict form
+        :return: TaxiiServer() object
+        """
+        server = TaxiiServer(**config)
+        server.verify_connected()
+        return server
 
     def _get_collections(self):
-        return [TaxiiIndicatorCollection(collection, score=self._score) for api_root in self.api_roots for collection in
-                api_root.collections if collection.can_read]
+        all_collections = self._get_all_collections()
+        return filter(lambda collection: collection.id in self._collection_ids,
+                      all_collections) if self._collection_ids else all_collections
+
+    def _get_all_collections(self):
+        collections = []
+        for api_root in self.api_roots:
+            for collection in api_root.collections:
+                if collection.can_read:
+                    collections.append(TaxiiIndicatorCollection(collection, score=self._score,
+                                                                pagination=self.pagination_count,
+                                                                parser=STIXPatternParser(self._ioc_types)))
+        return collections
 
     @property
     def collections(self):
@@ -159,33 +133,56 @@ class TaxiiServer(object):
         try:
             self.refresh()
             logger.info(f"Connected to server {self.title}")
-        except Exception:
-            logger.error("Unable to connect to server...")
+        except Exception as ex:
+            logger.error(f"Unable to connect to server... {ex}")
             raise Exception
 
     def __getattr__(self, item):
         return self._server.__getattribute__(item)
 
+    @property
+    def pagination_count(self) -> int:
+        """Return the current pagenation count setting."""
+        return self._pagination_count
+
 
 class TaxiiDriver(object):
+    """
+    This class manages the actual TAXII driver.
+    """
 
-    def __init__(self, servers):
-        self._servers = (TaxiiServer(server) for server in servers)
+    def __init__(self, servers: List[Dict]):
+        """
+        Initialize the class.
+
+        :param servers: list of server configurations, in dict form
+        """
+        self._servers = [TaxiiServer.get_server_from_conf(server) for server in servers]
 
     @property
-    def servers(self):
+    def servers(self) -> List[TaxiiServer]:
+        """Return the list of server configurations."""
         return self._servers
 
-    def test_connections(self):
+    def test_connections(self) -> None:
+        """
+        Verify that all servers can be connected to.
+        """
         for server in self.servers:
             server.verify_connected()
 
+    @property
+    def collections(self):
+        """Return list of server collections."""
+        return list(collection for server in self.servers for collection in server.collections)
+
     def generate_reports(self):
-        return chain(*[collection.stream_indicators() for server in self.servers for collection in server.collections])
+        return chain(
+            *[collection.stream_indicators() for collection in self.collections])
 
     def write_reports(self, stream):
         reports = self.generate_reports()
         for report in reports:
             stream.write(report)
-        return stream.complete
-
+        stream.complete = True
+        return True

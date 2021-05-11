@@ -1,7 +1,7 @@
 Metadata-Version: 1.1
 Name: python-cb-taxii-connector
-Version: 2.1.1
-Summary: Connector between VMware Carbon Black EDR and ThreatConnect
+Version: 2.0.0
+Summary: Connector between VMware Carbon Black EDR and STIX/TAXII 
 Home-page: https://github.com/carbonblack/cb-taxii-connector
 Author: VMware Carbon Black Developer Network
 Author-email: dev-support@carbonblack.com

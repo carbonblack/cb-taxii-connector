@@ -1,18 +1,47 @@
+#Define a new section like the below for each Taxii server to pull STIX Indicators from
+
 [taxiiserver]
 #------------------------------------------------------------------------------
 #    Taxii Server Configuration
 #------------------------------------------------------------------------------
 
-#Base URL For taxii server
-url=https://example.com:5000/taxii2
+#Base URL For Taxii 2 server - must include protocol , may include port
+#url=https://example.com:5000/taxii2
+url=
+#Indicators must be scored in EDR (1-100) -- the default score is 75
+#score=
 
-#username and password or authtoken authentication are supported
+#TAXII version defaults to 2.1 but can be controlled
+#version=V20
+#version=V21
+
+#by default, the connector will discover and pull IOC's from all readable collections on the server
+#if desired, you can limit the collections to a comma delimited list
+#collections=
+
+#IOC Type support
+#By default, the connector will pull MD5/SHA256 hashes, ipv4/6 addresses, and domain-names
+#To limit the types of IOCS in the generated feed, specify a comma delimited list of address, hash, domain
+#ioc_types=address,hash,domain
+
+#username and password or token authentication are supported
 #username=
 #password=
 #token=
 
-max_reports=10000
+#cert's can be provided as a path to a pem encoded cert+key pair
+# or as a comma delimited list of cert and then key file-paths
+#cert=
 
+#use to control validation of the servers certificate - defaults to TRUE if not specified
+#verify=
+
+#Additional stanzas can be defined for each taxii server to pull Indicators from
+#[anomali]
+#url=https://limo.anomali.com/api/v1/taxii2/taxii/
+#username=guest
+#password=guest
+#version=v20
 
 [bridge]
 #------------------------------------------------------------------------------
@@ -42,7 +71,7 @@ carbonblack_server_token=
 #  *other* than the Cb server itself.
 # carbonblack_server_url=
 
-# If you need to use an HTTPS proxy to access the iSIGHT API server, uncomment and configure the https_proxy
+# If you need to use an HTTPS proxy to access the taxii server, uncomment and configure the https_proxy
 # variable below.
 # https_proxy=http://proxyuser:proxypass@proxyhostname:proxyport
 
@@ -60,7 +89,7 @@ cache_folder=/usr/share/cb/integrations/cb-taxii-connector/cache
 # Setting multi_core to True will use multiple processes for feed retrieval.  This has the effect of keeping
 # memory usage low as the retrieval process ends after each retrieval returning used memory back to the OS.
 # If this option is set to False, it will run multi-threaded which will have a larger memory footprint.
-multi_core=False
+#multi_core=True
 
 # If this option is set to Stream (default), the feed will be written to file via a stream as it is retrieving the
 # feed from the configured taxii servers.  This can use significantly less memory than Bulk.  If set to Bulk, the entire

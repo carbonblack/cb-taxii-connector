@@ -1,6 +1,11 @@
+# coding: utf-8
+# Copyright © 2014-2020 VMware, Inc. All Rights Reserved.
+################################################################################
+
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
 
 @app.route('/api/info')
 def api_info():

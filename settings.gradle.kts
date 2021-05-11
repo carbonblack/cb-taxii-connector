@@ -6,6 +6,6 @@ pluginManagement {
     }
 }
 
-rootProject.name = "threatconnect"
+rootProject.name = "taxiiconnector"
 
 include(":smoketest")

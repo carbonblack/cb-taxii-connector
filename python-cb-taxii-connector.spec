@@ -1,5 +1,5 @@
 %define name python-cb-taxii-connector
-%define version 2.1.1
+%define version 2.0.0
 %define release 1
 %global _enable_debug_package 0
 %global debug_package %{nil}

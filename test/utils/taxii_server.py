@@ -14,7 +14,8 @@ configuration = {
                 "filename": f"{current_path}/mock_taxii_data.json"}
 }
 
-def start_mock_server():
+
+def start_taxii_server():
     log.setLevel("DEBUG")
 
     set_config(application_instance, "users", configuration)
