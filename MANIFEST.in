@@ -1,0 +1,6 @@
+recursive-include src/cbopensource *
+recursive-include root/etc *
+recursive-include root/usr *
+recursive-include root/var *
+include carbonblack_taxii_bridge.spec
+include src/cb-taxii-connector

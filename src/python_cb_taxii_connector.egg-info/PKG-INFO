@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: python-cb-taxii-connector
+Version: 2.1.1
+Summary: Connector between VMware Carbon Black EDR and ThreatConnect
+Home-page: https://github.com/carbonblack/cb-taxii-connector
+Author: VMware Carbon Black Developer Network
+Author-email: dev-support@carbonblack.com
+License: MIT
+Description: UNKNOWN
+Keywords: carbonblack bit9
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3

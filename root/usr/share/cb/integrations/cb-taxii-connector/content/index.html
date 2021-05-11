@@ -1,0 +1,123 @@
+<html>
+  <head>
+    <title>VMware Carbon Black EDR <-> {{integration_name}} Connector</title>
+
+    <style type="text/css">
+    A:link {color: black;}
+    A:visited {color: black;}
+    A:active {color: black;}
+    A:hover {color: #d02828;}
+    </style>
+
+    <style>
+    #config
+    {
+    font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+    width:100%;
+    border-collapse:collapse;
+    }
+    #config td, #config th 
+    {
+    font-size:1em;
+    border:1px solid #000000;
+    padding:3px 7px 2px 7px;
+    }
+    #config th 
+    {
+    font-size:1.1em;
+    text-align:left;
+    padding-top:5px;
+    padding-bottom:4px;
+    background-color:#F47A3B;
+    color:#ffffff;
+    }
+    #config tr.alt td 
+    {
+    color:#000000;
+    background-color:#666666;
+    }
+    </style>
+  </head>
+  <body bgcolor='white'>
+    <table align='center' width='600'>
+     <tr>
+         <td align='center'><img src='{{cb_image_path}}'></td>
+         <td align='center'><img src='{{integration_image_path}}' width='400'></td>
+      </tr>
+    </table>
+
+    <br>
+
+    <table align='center' width='600'>
+      <tr>
+        <td>
+
+          <h3>
+            Connector Configuration
+          </h3>
+          <table id="config" align='center'>
+            <tr>
+               <th width='200'><b>Config Option</b></td>
+               <th width='300'><b>Value</b></td>
+            </tr> 
+            {% for option in options.keys() %}
+            <tr class={{loop.cycle('', 'alt')}}>
+              <td>{{option}}</td>
+              <td>{{options[option]}}</td>
+            </tr>
+            {% endfor %}
+          </table>
+
+          <br>
+
+          <h3>
+            Feed Information
+          </h3>
+          <table id="config" align='center'>
+            <tr>
+              <th width='200'><b>Feed Param Name</b></td>
+              <th width-'300'><b>Feed Param Value</b></td>
+            </tr>
+            {% for feedparamname in feed['feedinfo'].keys() %}
+            <tr class={{ loop.cycle('', 'alt') }}>
+              <td width='200'>{{feedparamname}}</td>
+              <td width='300'>{{feed['feedinfo'][feedparamname]}}</td>
+            </tr>
+            {% endfor %}
+            <tr class={{ loop.cycle('', 'alt') }}>
+              <td width='200'>last_sync</td>
+              <td width='300'>{{last_sync}}</td>
+            </tr>
+          </table>
+
+          <br>
+
+          <h3>
+            Feed Contents
+          </h3>
+
+          <table id="config" align='center'>
+            <tr>
+              <th width='200'>Format</td>
+              <th width='300'>Description</td>
+            </tr>
+            <tr>
+              <td width='200'><a href='{{json_feed_path}}'>JSON</a></td>
+              <td width='300'>Designed for programmatic consumption; used by VMware Carbon Black EDR Server</td>
+            </tr>
+            <tr class='alt'>
+              <td width='200'><a href='feed.html'>HTML</a></td>
+              <td width='300'>Designed for human consumption; used to explore feed contents and for troubleshooting</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td><br></td>
+      </tr>
+      <tr>
+        <td>Copyright © 2014-2020 VMware, Inc. All Rights Reserved.</td>
+      </tr>
+    </table>
+  </body>
+</html>
