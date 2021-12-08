@@ -27,7 +27,6 @@ root/usr/share/cb/integrations/cb-taxii-connector/content/feed.html
 root/usr/share/cb/integrations/cb-taxii-connector/content/index.html
 root/usr/share/cb/integrations/cb-taxii-connector/content/taxii-small.png
 root/usr/share/cb/integrations/cb-taxii-connector/content/taxii.png
-scripts/deploy
 scripts/git-setup
 smoketest/Dockerfile
 smoketest/build.gradle.kts
@@ -48,7 +47,13 @@ src/cbopensource/connectors/taxii/feed_cache.py
 src/cbopensource/connectors/taxii/taxii_connector_config.py
 src/cbopensource/connectors/taxii/version.py
 src/cbopensource/connectors/taxii/__pycache__/__init__.cpython-38.pyc
+src/cbopensource/connectors/taxii/__pycache__/bridge.cpython-38.pyc
+src/cbopensource/connectors/taxii/__pycache__/cb_feed_util.cpython-38.pyc
+src/cbopensource/connectors/taxii/__pycache__/config_util.cpython-38.pyc
+src/cbopensource/connectors/taxii/__pycache__/cybox_parse.cpython-38.pyc
+src/cbopensource/connectors/taxii/__pycache__/singleton.cpython-38.pyc
 src/cbopensource/connectors/taxii/__pycache__/taxii_connector_config.cpython-38.pyc
+src/cbopensource/connectors/taxii/__pycache__/util.cpython-38.pyc
 src/cbopensource/driver/__init__.py
 src/cbopensource/driver/taxii.py
 src/cbopensource/driver/taxii_parser.py
