@@ -313,7 +313,7 @@ class CbTaxiiFeedConverter(object):
                                     score = default_score
 
                                 if not indicator.timestamp:
-                                    timestamp = 0
+                                    timestamp = int(datetime.datetime.now().timestamp())
                                 else:
                                     timestamp = int((indicator.timestamp - EPOCH).total_seconds())
 
