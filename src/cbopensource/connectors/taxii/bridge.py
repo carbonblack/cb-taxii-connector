@@ -313,7 +313,15 @@ class CbTaxiiFeedConverter(object):
                                     score = default_score
 
                                 if not indicator.timestamp:
-                                    timestamp = 0
+                                    try:
+                                      timestamp = feed_helper.start_date
+                                    except:
+                                      try:
+                                        _logger.warning("Falling back to now() for timestamp of indicator.")
+                                        timestamp = int(datetime.datetime.now().timestamp())
+                                      except:
+                                        _logger.warning("Had to fall back to EPOCH for timestamp of indicator.")
+                                        timestamp = 0
                                 else:
                                     timestamp = int((indicator.timestamp - EPOCH).total_seconds())
 
