@@ -315,16 +315,16 @@ class CbTaxiiFeedConverter(object):
                                     score = default_score
 
                                 if not indicator.timestamp:
+                                  _logger.debug("Indicator is missing timestamp, searching for another timestamp option...")
                                     try:
-                                      _logger.warning("Using feed_helper's start_date value")
-                                      _logger.warning("Value is: " + str(int((feed_helper.start_date).timestamp())))
+                                      _logger.debug("Using feed_helper's start_date value for timestamp of indicator.")
                                       timestamp = int((feed_helper.start_date).timestamp())
                                     except:
                                       try:
-                                        _logger.warning("Falling back to now() for timestamp of indicator.")
+                                        _logger.debug("Falling back to now() for timestamp of indicator.")
                                         timestamp = int(datetime.datetime.now().timestamp())
                                       except:
-                                        _logger.warning("Had to fall back to EPOCH for timestamp of indicator.")
+                                        _logger.debug("Had to fall back to EPOCH for timestamp of indicator.")
                                         timestamp = 0
                                 else:
                                     timestamp = int((indicator.timestamp - EPOCH).total_seconds())
