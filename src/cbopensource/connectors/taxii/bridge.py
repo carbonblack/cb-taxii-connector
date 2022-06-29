@@ -163,6 +163,8 @@ class CbTaxiiFeedConverter(object):
         available = collection.available
         collection_type = collection.type
         default_score = site.get('default_score')
+        try: ioc_exclusions = [x.strip() for x in site.get('ioc_exclusions').lower().split(',')]
+        except: ioc_exclusions = []
         _logger.info(f"Working on SITE {site.get('site')}, NAME {collection_name}, FEED {sanitized_feed_name}, "
                      f"AVAIL {available}, TYPE {collection_type}")
         _logger.info('-' * 80)
@@ -314,7 +316,9 @@ class CbTaxiiFeedConverter(object):
 
                                 if not indicator.timestamp:
                                     try:
-                                      timestamp = feed_helper.start_date
+                                      _logger.warning("Using feed_helper's start_date value")
+                                      _logger.warning("Value is: " + str(int((feed_helper.start_date).timestamp())))
+                                      timestamp = int((feed_helper.start_date).timestamp())
                                     except:
                                       try:
                                         _logger.warning("Falling back to now() for timestamp of indicator.")
@@ -327,7 +331,7 @@ class CbTaxiiFeedConverter(object):
 
                                 # Cybox observable returns a list
                                 reports.extend(cybox_parse_observable(indicator.observable, indicator, timestamp,
-                                                                      score))
+                                                                      score, ioc_exclusions))
 
                         #
                         # Now lets find some data.  Iterate through all observables and parse
@@ -338,7 +342,7 @@ class CbTaxiiFeedConverter(object):
                                     continue
 
                                 # Cybox observable returns a list
-                                reports.extend(cybox_parse_observable(observable, None, timestamp, default_score))
+                                reports.extend(cybox_parse_observable(observable, None, timestamp, default_score, ioc_exclusions))
 
                         #
                         # Delete our temporary file
@@ -496,7 +500,10 @@ class CbTaxiiFeedConverter(object):
                                 key_file=site.get('key_file'))
 
             if not site.get('collection_management_path', ''):
-                collections = client.get_collections()
+                try: collections = client.get_collections()
+                except Exception as e:
+                    _logger.error(f"Failed to get collections for site! Reason: {e}")
+                    continue
             else:
                 uri = ''
                 if site.get('use_https'):
@@ -508,7 +515,10 @@ class CbTaxiiFeedConverter(object):
                 uri += site.get('collection_management_path')
                 _logger.info('Collection Management Path: {}'.format(uri))
 
-                collections: List[CabbyCollection] = client.get_collections(uri=uri)
+                try: collections: List[CabbyCollection] = client.get_collections(uri=uri)
+                except Exception as e:
+                    _logger.error(f"Failed to get collections for site! Reason: {e}")
+                    continue
 
             if len(collections) == 0:
                 _logger.info('Unable to find any collections.  Exiting...')
