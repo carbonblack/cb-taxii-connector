@@ -96,6 +96,13 @@ have configured.*
 output when you run it manually.*
 
 
+You can also enable debug logging by executing:
+
+```
+/usr/share/cb/integrations/cbtaxii/cbtaxii -d 
+```
+
+
 ## Troubleshooting
 
 If you suspect a problem, please first look at the cbtaxii connector logs found here:
@@ -110,7 +117,7 @@ We've seen where Soltra Edge had a user account that wasn't returning data past 
 Additionally, due to STIX being a particulary verbose format, sometimes IOCs are stored in fields that we don't expect.  This could result in some IOCs you see in your Taxii platform (such as SoltraEdge) but not show up in Cb Response.  For this and other issues, you can export the raw XML that our connector receives so we can see how information is represented.  To export, use the following command, then contact us and we'll setup a place for you to place the exported XML for our analysis.
 
 ```
-/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf --export
+/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf --export-dir
 ```
 
 ## Build gotchas
