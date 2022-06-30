@@ -8,11 +8,13 @@ You can install the pre-built RPMs via YUM by using the CB Open Source repositor
 The pre-built RPM is supported via our [User eXchange (Jive)](https://community.carbonblack.com/community/developer-relations) 
 and via email to dev-support@carbonblack.com.  
 
+
 ## Support
 
 1. View all API and integration offerings on the [Developer Network](https://developer.carbonblack.com/) along with reference documentation, video tutorials, and how-to guides.
 2. Use the [Developer Community Forum](https://community.carbonblack.com/t5/Developer-Relations/bd-p/developer-relations) to discuss issues and get answers from other API developers in the Carbon Black Community.
 3. Report bugs and change requests to [Carbon Black Support](http://carbonblack.com/resources/support/).
+
 
 ## Introduction
 
@@ -27,7 +29,8 @@ The following IOC types are extracted from STIX data:
 * Domain Names
 * IP-Addresses
 * IP-Address Ranges
-	
+
+
 ## Requirements
 
 This EDR TAXII Connector has the following requirements:
@@ -41,12 +44,14 @@ cb-enterprise-5.0.0.150122.1654-1.el6.x86_64
 
 * *Access to TAXII Service Provider* – the purpose of this integration is to retrieve STIX threat information via a TAXII service, so if you do not have access to a TAXII service this integration will be of no value. Example services are SoltraEdge and HailATaxii.com
 
+
 ## Installation
 
 Take the following steps to install the Cb Response Taxii Connector:
 
 1. Install the CbOpenSource.repo file found in the root of this repository (place it in /etc/yum.repos.d/ on your head CB Server node.)
 2. Install by issuing the following command as root (or sudo): yum install python-cbtaxii -y
+
 
 ## Upgrades
 
@@ -70,7 +75,7 @@ mv /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxi
 ```
 
 From here, one or more TAXII services can be configured.
- 
+
 
 ## Execution
 
@@ -147,9 +152,9 @@ yum install /home/user/rpm_build/RPMS/x86_64/python-cbtaxii-1.6.7-4.el8.x86_64.r
 5. Fix errors as necessary (rinse & repeat)
 
 If ImportError is reported upon execution, it's likely that one or more packages is missing from either the virtual Python3 enviornment used for building or the binary itself. To solve:
-	   - Verify the package is installed in the virtual Python3 enviornment:
+	   * Verify the package is installed in the virtual Python3 enviornment:
 	   	```/usr/share/cb_clone/virtualenv/bin/python –m pip install <missing package>```
-	   - Add the package to the cb-taxii-connector.spec PyInstaller file:
+	   * Add the package to the cb-taxii-connector.spec PyInstaller file:
 	   	```datas.extend([(get_package_paths('<package>')[1], '<package>')])```
 		
 6. When utilizing a custom build, it may be beneficial to exclude python-cbtaxii from the /etc/yum.conf to prevent accidental upgrades. To do this add the following:
