@@ -156,7 +156,8 @@ If ImportError is reported upon execution, it's likely that one or more packages
 	   	```/usr/share/cb_clone/virtualenv/bin/python –m pip install <missing package>```
 	   * Add the package to the cb-taxii-connector.spec PyInstaller file:
 	   	```datas.extend([(get_package_paths('<package>')[1], '<package>')])```
-		
+
+
 6. When utilizing a custom build, it may be beneficial to exclude python-cbtaxii from the /etc/yum.conf to prevent accidental upgrades. To do this add the following:
 ```exclude=<any existing exclusions here> python-cbtaxii*```
 
