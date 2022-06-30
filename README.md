@@ -154,7 +154,8 @@ yum install /home/user/rpm_build/RPMS/x86_64/python-cbtaxii-1.6.7-4.el8.x86_64.r
 
 	   	* Verify the package is installed in the virtual Python3 enviornment:
 	   		```/usr/share/cb_clone/virtualenv/bin/python –m pip install <missing package>```
-	   	* Add the package to the cb-taxii-connector.spec PyInstaller file:
+			
+	   	* If necessary, add the package to the cb-taxii-connector.spec PyInstaller file:
 	   		```datas.extend([(get_package_paths('<package>')[1], '<package>')])```
 
 	
