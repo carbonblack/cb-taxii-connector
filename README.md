@@ -152,11 +152,11 @@ yum install /home/user/rpm_build/RPMS/x86_64/python-cbtaxii-1.6.7-4.el8.x86_64.r
 5. Fix errors as necessary (rinse & repeat)
 	* If ImportError is reported upon execution, it's likely that one or more packages is missing from either the virtual Python3 enviornment used for building or the binary itself. To solve:
 
-	   	* Verify the package is installed in the virtual Python3 enviornment:
-	   		```/usr/share/cb_clone/virtualenv/bin/python –m pip install <missing package>```
+	   	* Verify the package is installed in the virtual Python3 enviornment: 
+	   	```/usr/share/cb_clone/virtualenv/bin/python –m pip install <missing package>```
 			
-	   	* If necessary, add the package to the cb-taxii-connector.spec PyInstaller file:
-	   		```datas.extend([(get_package_paths('<package>')[1], '<package>')])```
+	   	* If necessary, add the package to the cb-taxii-connector.spec PyInstaller file: 
+	   	```datas.extend([(get_package_paths('<package>')[1], '<package>')])```
 
 	
 6. When utilizing a custom build, it may be beneficial to exclude python-cbtaxii from the /etc/yum.conf to prevent accidental upgrades. To do this add the following:
