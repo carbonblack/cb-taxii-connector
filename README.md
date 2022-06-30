@@ -120,13 +120,44 @@ Additionally, due to STIX being a particulary verbose format, sometimes IOCs are
 /usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf --export-dir
 ```
 
-## Build gotchas
+## Building
+
+The easiest way to build the application is via PyInstaller and utilizing Carbon Black EDRs virtual Python3 enviornment (or a clone of it is actually best).
+To do this:
+
+1. Install PyInstaller: ```/usr/share/cb_clone/virtualenv/bin/python –m pip install PyInstaller```
+2. Created symbolic links for /bin/python and /bin/pyinstaller via:
+```
+ln –s "$(which pyinstaller)" /bin/pyinstaller
+ln –s /usr/share/cb_clone/virtualenv/bin/python /bin/python
+```
+3. Build and (re)install:
+```
+cd </path/to/source/code/directory/here>
+rm -rf /home/user/rpm_build/
+mkdir /home/user/rpm_build/
+/usr/share/cb_clone/virtualenv/bin/python setup.py build_rpm --rpmbuild-dir=/home/user/rpm_build/
+yum remove python-cbtaxii.x86_64
+yum install /home/user/rpm_build/RPMS/x86_64/python-cbtaxii-1.6.7-4.el8.x86_64.rpm --nogpgcheck
+```
+4. Run the cbtaxii connector, after configuring it (see 'Configuration' above)
+```
+/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf
+```
+5. Fix errors as necessary (rinse & repeat)
+
+If ImportError is reported upon execution, it's likely that one or more packages is missing from either the virtual Python3 enviornment used for building or the binary itself. To solve:
+	   - Verify the package is installed in the virtual Python3 enviornment:
+	   	```/usr/share/cb_clone/virtualenv/bin/python –m pip install <missing package>```
+	   - Add the package to the cb-taxii-connector.spec PyInstaller file:
+	   	```datas.extend([(get_package_paths('<package>')[1], '<package>')])```
+		
+6. When utilizing a custom build, it may be beneficial to exclude python-cbtaxii from the /etc/yum.conf to prevent accidental upgrades. To do this add the following:
+```exclude=<any existing exclusions here> python-cbtaxii*```
+
 
 If this connector is going to run on Centos 6 then you need to use the source package of lxml from pip.  
 Use this command to grab python requirements:
-
 ```
-pip install --no-binary lxml -r requirements.txt
+pip insall --no-binary lxml -r requirements.txt
 ```
-
-
