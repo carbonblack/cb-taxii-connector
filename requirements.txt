@@ -4,7 +4,6 @@ cbapi==1.7.1
 cbint==1.0.0
 cabby==0.1.20
 pyinstaller==4.3
-simplejson
 lxml==4.6.2
 ipaddress
 configparser
@@ -23,7 +22,6 @@ typing
 multiprocessing
 unittest
 cybox
-stix
 base64
 imghdr
 json
