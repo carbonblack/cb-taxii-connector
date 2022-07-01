@@ -383,8 +383,8 @@ class CbTaxiiFeedConverter(object):
         _logger.info(f"Total number of reports: {len(reports)}")
 
         if site.get('reports_limit') < len(reports):
-            _logger.info("Truncating reports to length {0}".format(site.get('reports_limit')))
-            reports = reports[:site.get('reports_limit')]
+            _logger.info("Truncating oldest reports to length {0}".format(site.get('reports_limit')))
+            reports = reports[-(site.get('reports_limit')):]
 
         try:
             use_icon = site.get('icon_link')
