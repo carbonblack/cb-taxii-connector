@@ -55,6 +55,9 @@ def parse_config(config_file_path: str, strict_mode: bool = False) -> Dict[str, 
     sites = []
 
     for section in config.sections():
+
+        _logger.debug(f"Reading config section: '" + section + "' ...")
+
         # exclude cbconfig stanza -- all others are sites
         if section.lower() == 'cbconfig':
             continue
@@ -110,6 +113,12 @@ def parse_config(config_file_path: str, strict_mode: bool = False) -> Dict[str, 
         except ValueError:
             raise TaxiiConfigurationException(f"Config File: `feeds_enable` for section `{section}`"
                                               " must be true or false")
+
+        if config.has_option(section, "ioc_exclusions"):
+            ioc_exclusions = config.get(section, "ioc_exclusions")
+        else:
+            ioc_exclusions = []
+
 
         if config.has_option(section, "collections"):
             collections = config.get(section, "collections")
@@ -243,6 +252,7 @@ def parse_config(config_file_path: str, strict_mode: bool = False) -> Dict[str, 
                       "collections": collections,
                       "icon_link": icon_link,
                       "feeds_enable": feeds_enable,
+                      "ioc_exclusions": ioc_exclusions,
                       "start_date": start_date,
                       "use_https": use_https,
                       "key_file": key_file,
@@ -256,10 +266,11 @@ def parse_config(config_file_path: str, strict_mode: bool = False) -> Dict[str, 
                       "default_score": default_score,
                       "reports_limit": reports_limit})
 
-        if len(sites) == 0:
-            _logger.warning("No sites specified in configuration -- nothing will be done!")
-        return {'server_url': server_url,
-                'api_token': api_token,
-                'sites': sites,
-                'http_proxy_url': http_proxy_url,
-                'https_proxy_url': https_proxy_url}
+
+    if len(sites) == 0:
+        _logger.warning("No sites specified in configuration -- nothing will be done!")
+    return {'server_url': server_url,
+            'api_token': api_token,
+            'sites': sites,
+            'http_proxy_url': http_proxy_url,
+            'https_proxy_url': https_proxy_url}

@@ -8,9 +8,10 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import simplejson as json
-from cbfeeds import CbFeed, CbFeedInfo
 
 from .util import TZ_UTC
+
+from cbfeeds import CbFeed, CbFeedInfo
 
 _logger = logging.getLogger(__name__)
 

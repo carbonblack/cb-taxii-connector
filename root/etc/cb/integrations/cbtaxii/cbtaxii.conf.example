@@ -1,139 +1,128 @@
-
 # CBTAXII CONFIGURATION FILE
-# Imports TAXII/STIX feeds into VMware Carbon Black EDR feeds
+# Imports TAXII/STIX feeds into Carbon Black Feeds.
 
-# general cbconfig options
 
+# General cbconfig options
 [cbconfig]
 
-#
-# Cb Response Server Url
-#
+# CB EDR Server URL
 server_url=https://test.carbonblack.io
 
-#
-# You need to supply a CB global administrator API key here so that we can add our feed
-#
-auth_token=
+# CB 'Global Administrator' API key. Required for adding feeds.
+auth_token=TOKEN_GOES_HERE
 
-#
-# Proxy configuration
-#
+# (Optional) Proxy configuration
+#   Leave commented if not required. Defaults to no proxy.
 #http_proxy_url=
 #https_proxy_url=
-#
 
-#
+
+##### [ START OF DEFINITIONS SECTION] #####
 # Put each site into its own configuration section.
-# You might just have a single site, like soltra edge or a remote taxii server
-#
+# You might just have a single site, that is okay.
 
-[eclecticiq]
+#[SiteNameHere-CanBeAnythingUnique]
 
-#
-# the address of the site (server ip or dns; do not put http(s):// here)
-# we prepend http or https accordingly.
-#
-site=test.taxiistand.com
+# The address of the site (server IP or DNS hostname). Do not put http(s):// here.
+#site=test.taxiistand.com
 
-#
-# Discovery path.  This is required
-#
-discovery_path=/read-only/services/discovery
+# (Optional) Change to True to use https versus http.
+#   Defaults to False.
+#use_https=True
 
-#
-# Collection Management path.  If not specified we will try to discover.
-#
-collection_management_path=/read-only/services/collection-management
+# (Optional) Verify SSL.
+#   Defaults to True
+#ssl_verify=False
 
-#
-# Poll path.  If not specified we will try to discover.
-#
-poll_path=/read-only/services/poll
+# Username for auth
+#username=
 
-#
-# change to true if you require https versus http
-#
-use_https=True
+# Password for auth
+#password=
 
-#
-# Verify SSL
-# Defaults to True
-#
-ssl_verify=False
+# (Optional) If you need SSL certificates for authentication, 
+#   set the path of the certificate and key here.
+#   Defaults to None.
+#cert_file=
+#key_file=
 
-#
-# if you need SSL certificates for authentication, set the path of the
-# certificate and key here.  Please leave blank to ignore.
-#
-cert_file=
-key_file=
-
-#
-# Set the default risk score of items from this TAXII feed
-#
-default_score=50
-
-#
-# the output path for the feeds, probably leave this alone
-#
-output_path=/usr/share/cb/integrations/cbtaxii/feeds/
-
-#
-# the icon link, we come with soltra and taxii icons, but if you
-# have your own, this will show up
-#
-icon_link=/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
-
-#
-# username for auth
-#
-username=
-
-#
-# password for auth
-#
-password=
-
-#
-# collections to retrieve (* for all, otherwise comma separated list case-insensitive)
-#
-collections=*
-
-
-#
-# automatically create CB feeds, probably leave this to true
-#
-feeds_enable=true
-
-#
-# (optional) the start date for which to start requesting data.
-# Defaults to 2017-01-01 00:00:00 if you supply nothing
-#
-start_date=2017-01-01 00:00:00
-
-#
-# (optional) the minutes to advance for each request.  This
-# defaults to 60.  If you don't have a lot of data, you could
-# advance your requests to every 60 minutes or multiply 60 times
-# number of hours, so 1440 to ask for data in daily chunks
-#
-minutes_to_advance=1440
-
-#
-# a path to CA SSL certificate file
-#
+# (Optional) A path to CA SSL certificate file
+#   Defaults to None.
 #ca_cert=
 
+# (Optional) Collections to retrieve (* for all, otherwise comma separated case-insensitive list)
+#   Defaults to *
+#collections=*
+
+# Discovery path.
+#discovery_path=/read-only/services/discovery
+
+# (Optional) Collection Management path.  If not specified we will try to auto-discover.
+#   Defaults to not specified / auto-discover.
+#collection_management_path=/read-only/services/collection-management
+
+# (Optional) Poll path.  If not specified we will try to auto-discover.
+#   Defaults to not specified / auto-discover.
+#poll_path=/read-only/services/poll
+
+# The output path for the feeds, probably leave this as shown.
+#output_path=/usr/share/cb/integrations/cbtaxii/feeds/
+
+# The icon link to show on the threat Feed in EDR.
+#   Use PNG. Max width: 240px. Max height: 50px.
+#icon_link=/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
+
+# (Optional) Automatically create CB Threat Feeds, probably set this to True.
+#   A CB Threat Feed will be created per available Collection.
+#   Defaults to False.
+#feeds_enable=true
+
+# (Optional) Set the default risk score of items from this TAXII feed.
+#   Defaults to 50.
+#default_score=50
+
+# (Optional) List any IOC types you do not want added to Threat Reports.
+#   Defaults to not specified (none / no exclusions).
+#ioc_exclusions=domain,ipv4,ipv6,md5,sha256
+
+# (Optional) The start date for which to start requesting data.
+#   Defaults to 2017-01-01 00:00:00
+#start_date=2017-01-01 00:00:00
+
+# (Optional) Force the connector to re-pull all reports from start_date to present.
+#   This will cause Threat Report duplication if not used purposefully.
+#   Defaults to False.
+#reset_start_date=False
+
+# (Optional) The minutes to advance for each request.
+#   If you don't have a lot of data, you could advance
+#   your requests to every 60 minutes or multiply 60 times
+#   number of hours, so 1440 to ask for data in daily chunks.
+#   Defaults to 60.
+#minutes_to_advance=1440
+
+# (Optional) The number of reports to collect from each site.
+#   Defaults to 10K.
+#reports_limit=10000
+
+##### [ END OF DEFINITIONS SECTION] #####
+
+
+## Start of actual configuration, use the above for reference only.
 
 ## If you want to use hailataxii
 #[hailataxii]
 #site=hailataxii.com
-#output_path=/usr/share/cb/integrations/cbtaxii/feeds/
-#icon_link=/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
+#use_https=true
+#ssl_verify=true
 #username=guest
 #password=guest
-#feeds_enable=true
-#start_date=2016-11-01 00:00:00
-#minutes_to_advance=1440
+#collections=*
 #discovery_path=/taxii-discovery-service
+#output_path=/usr/share/cb/integrations/cbtaxii/feeds/
+#icon_link=/usr/share/cb/integrations/cbtaxii/taxii-logov2.png
+#feeds_enable=true
+#start_date=2022-01-01 00:00:00
+#reset_start_date=False
+#minutes_to_advance=1440
+#reports_limit=10000

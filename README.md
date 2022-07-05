@@ -1,4 +1,4 @@
-# cb-taxii-connector (CentOS 6/7/8)
+# cb-taxii-connector (CentOS/RHEL 7/8)
 
 VMware Carbon Black EDR connector for pulling and converting STIX information from TAXII Service Providers into EDR Feeds.
 
@@ -8,11 +8,13 @@ You can install the pre-built RPMs via YUM by using the CB Open Source repositor
 The pre-built RPM is supported via our [User eXchange (Jive)](https://community.carbonblack.com/community/developer-relations) 
 and via email to dev-support@carbonblack.com.  
 
+
 ## Support
 
 1. View all API and integration offerings on the [Developer Network](https://developer.carbonblack.com/) along with reference documentation, video tutorials, and how-to guides.
 2. Use the [Developer Community Forum](https://community.carbonblack.com/t5/Developer-Relations/bd-p/developer-relations) to discuss issues and get answers from other API developers in the Carbon Black Community.
 3. Report bugs and change requests to [Carbon Black Support](http://carbonblack.com/resources/support/).
+
 
 ## Introduction
 
@@ -27,7 +29,8 @@ The following IOC types are extracted from STIX data:
 * Domain Names
 * IP-Addresses
 * IP-Address Ranges
-	
+
+
 ## Requirements
 
 This EDR TAXII Connector has the following requirements:
@@ -41,12 +44,14 @@ cb-enterprise-5.0.0.150122.1654-1.el6.x86_64
 
 * *Access to TAXII Service Provider* – the purpose of this integration is to retrieve STIX threat information via a TAXII service, so if you do not have access to a TAXII service this integration will be of no value. Example services are SoltraEdge and HailATaxii.com
 
+
 ## Installation
 
 Take the following steps to install the Cb Response Taxii Connector:
 
 1. Install the CbOpenSource.repo file found in the root of this repository (place it in /etc/yum.repos.d/ on your head CB Server node.)
 2. Install by issuing the following command as root (or sudo): yum install python-cbtaxii -y
+
 
 ## Upgrades
 
@@ -69,89 +74,12 @@ A sample file is provided in `/etc/cb/integrations/cbtaxii/cbtaxii.conf.example`
 mv /etc/cb/integrations/cbtaxii/cbtaxii.conf.example /etc/cb/integrations/cbtaxii/cbtaxii.conf
 ```
 
-From here, one or more TAXII services can be configured. The example configuration file is placed here along with the comments it contains:
+From here, one or more TAXII services can be configured.
 
-```
-    # Imports taxii/stix feeds into VMware Carbon Black EDR feeds
-    
-    # general cbconfig options
-    [cbconfig]
-    # change this if your API port is different
-    #(API port is usually the same port that you login using for the UI) 
-    server_port=443
-    
-    # You NEED to set this to a CB Server Admin API Token
-    auth_token=
-    
-    #
-    # Put each site into its own configuration section.
-    # You might just have a single site, like soltra edge or a remote taxii server
-    # Make sure each section like this has a unique name 
-    #
-    
-    [soltraedge]
-    # the address of the site (only server ip or dns; don't put https:// or a trailing slash) 
-    # for example, site=analysis.fsisac.com
-    site=192.168.230.205
-    
-    # change to true if you require https for your TAXII service connection 
-    use_https=false
-    
-    # by default, we validate SSL certificates. Turn this off by setting sslverify=false
-    ssl_verify=false
-    
-    # if you need SSL certificates for authentication, set the path of the 
-    # certificate and key here. Please leave blank to ignore.
-    cert_file=
-    key_file=
-    
-    # username for auth 
-    username=admin
-    
-    # password for auth 
-    password=avalanche
-
-    # you can optionally specify which collections to convert to feeds (comma-delimited)
-    collections=*
-
-    # the output path for the feeds, probably leave this alone 
-    output_path=/usr/share/cb/integrations/cbtaxii/feeds/
-    
-    # the icon link, we come with soltra and taxii icons, but if you 
-    # have your own, this will show up 
-    icon_link=/usr/share/cb/integrations/cbtaxii/soltra-logo.png
-    
-    # automatically create CB feeds, probably leave this to true 
-    feeds_enable=true
-    
-    # do you want feed hits in CB to generate alerts? Available options 
-    # are syslog or cb, and you can do both by putting syslog,cb 
-    feeds_alerting=syslog,cb
-    
-    # there have been a lot of indicators that are whole class Cs.
-    # Set this to false if you do not want to include these indicators, 
-    # otherwise set to true
-    enable_ip_ranges=true
-
-    # (optional) the start date for which to start requesting data. 
-    # Defaults to 2015-01-01 00:00:00 if you supply nothing 
-    start_date=2015-03-01 00:00:00
-
-    # (optional) the minutes to advance for each request. This
-    # defaults to 15. If you don't have a lot of data, you could
-    # advance your requests to every 60 minutes or multiply 60 times 
-    # number of hours, so 1440 to ask for data in daily chunks 
-    minutes_to_advance=30
-
-    # (OPTIONAL)
-    # The number of reports to collect from each site, limited to 10K by default
-    # when ommited
-    reports_limit=10000
-```    
 
 ## Execution
 
-By default the linux cron daemon will run this integration every hour to check for new data from the TAXII services you 
+By default the linux cron daemon will run this integration every day at 1:00 AM to check for new data from the TAXII services you 
 have configured. When it runs it will use the current settings found in `/etc/cb/integrations/cbtaxii/cbtaxii.conf`, 
 so make sure you are careful when changing any of those settings.
 
@@ -172,11 +100,13 @@ have configured.*
 *Note #2: this script logs everything to /var/log/cb/integrations/cbtaxii/cbtaxii.log , so you will see very little 
 output when you run it manually.*
 
-If you want to check that your credentials work and list the available collections, execute the same command with -l (lowercase-L):
+
+You can also enable debug logging by executing:
 
 ```
-/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf -l
+/usr/share/cb/integrations/cbtaxii/cbtaxii -d 
 ```
+
 
 ## Troubleshooting
 
@@ -192,16 +122,49 @@ We've seen where Soltra Edge had a user account that wasn't returning data past 
 Additionally, due to STIX being a particulary verbose format, sometimes IOCs are stored in fields that we don't expect.  This could result in some IOCs you see in your Taxii platform (such as SoltraEdge) but not show up in Cb Response.  For this and other issues, you can export the raw XML that our connector receives so we can see how information is represented.  To export, use the following command, then contact us and we'll setup a place for you to place the exported XML for our analysis.
 
 ```
-/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf --export
+/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf --export-dir
 ```
 
-## Build gotchas
+## Building
+
+The easiest way to build the application is via PyInstaller and utilizing Carbon Black EDRs virtual Python3 enviornment (or a clone of it is actually best).
+To do this:
+
+1. Install PyInstaller: ```/usr/share/cb_clone/virtualenv/bin/python –m pip install PyInstaller```
+2. Created symbolic links for /bin/python and /bin/pyinstaller via:
+```
+ln –s "$(which pyinstaller)" /bin/pyinstaller
+ln –s /usr/share/cb_clone/virtualenv/bin/python /bin/python
+```
+3. Build and (re)install:
+```
+cd </path/to/source/code/directory/here>
+rm -rf /home/user/rpm_build/
+mkdir /home/user/rpm_build/
+/usr/share/cb_clone/virtualenv/bin/python setup.py build_rpm --rpmbuild-dir=/home/user/rpm_build/
+yum remove python-cbtaxii.x86_64
+yum install /home/user/rpm_build/RPMS/x86_64/python-cbtaxii-1.6.7-4.el8.x86_64.rpm --nogpgcheck
+```
+4. Run the cbtaxii connector, after configuring it (see 'Configuration' above)
+```
+/usr/share/cb/integrations/cbtaxii/cbtaxii -c /etc/cb/integrations/cbtaxii/cbtaxii.conf
+```
+5. Fix errors as necessary (rinse & repeat)
+	* If ImportError is reported upon execution, it's likely that one or more packages is missing from either the virtual Python3 enviornment used for building or the binary itself. To solve:
+
+	   	* Verify the package is installed in the virtual Python3 enviornment: 
+	   	```/usr/share/cb_clone/virtualenv/bin/python –m pip install <missing package>```
+			
+	   	* If necessary, add the package to the cb-taxii-connector.spec PyInstaller file: 
+	   	```datas.extend([(get_package_paths('<package>')[1], '<package>')])```
+
+	
+6. When utilizing a custom build, it may be beneficial to exclude python-cbtaxii from the /etc/yum.conf to prevent accidental upgrades. To do this add the following:
+```exclude=<any existing exclusions here> python-cbtaxii*```
+
 
 If this connector is going to run on Centos 6 then you need to use the source package of lxml from pip.  
 Use this command to grab python requirements:
-
 ```
-pip install --no-binary lxml -r requirements.txt
+pip insall --no-binary lxml -r requirements.txt
 ```
-
-

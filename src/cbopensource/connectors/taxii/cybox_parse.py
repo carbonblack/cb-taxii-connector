@@ -128,7 +128,7 @@ def sanitize_id(the_id: str) -> str:
 
 
 def cybox_parse_observable(observable: Observable, indicator: Optional[Indicator], timestamp: int,
-                           score: int) -> List[Dict[str, Any]]:
+                           score: int, ioc_exclusions: list) -> List[Dict[str, Any]]:
     """
     Parse cybox observables.
 
@@ -141,14 +141,14 @@ def cybox_parse_observable(observable: Observable, indicator: Optional[Indicator
     if observable.observable_composition:
         reports = []
         for composed_observable in observable.observable_composition.observables:
-            reports.extend(_cybox_parse_observable(composed_observable, indicator, timestamp, score))
+            reports.extend(_cybox_parse_observable(composed_observable, indicator, timestamp, score, ioc_exclusions))
         return reports
     else:
-        return _cybox_parse_observable(observable, indicator, timestamp, score)
+        return _cybox_parse_observable(observable, indicator, timestamp, score, ioc_exclusions)
 
 
 def _cybox_parse_observable(observable: Observable, indicator: Optional[Indicator],
-                            timestamp: int, score: int) -> List[Dict[str, Any]]:
+                            timestamp: int, score: int, ioc_exclusions: list) -> List[Dict[str, Any]]:
     """
     parses a cybox observable and returns a list of iocs.
     :param observable: the cybox obserable to parse
@@ -218,27 +218,32 @@ def _cybox_parse_observable(observable: Observable, indicator: Optional[Indicato
     if type(the_props) == DomainName:
         if the_props.value and the_props.value.value:
             _logger.debug(f"Found DOMAIN: {the_props.value.value}")
-            append_report_if_iocs_found(the_props.value, target_key="value", ioc_label="dns",
+            if 'domain' in ioc_exclusions: pass
+            else: append_report_if_iocs_found(the_props.value, target_key="value", ioc_label="dns",
                                         validator=validate_domain_name)
 
     elif type(the_props) == Address:
         if the_props.category == 'ipv4-addr' and the_props.address_value:
             _logger.debug(f"Found IPV4: {the_props.address_value}")
-            append_report_if_iocs_found(the_props.address_value, target_key="value", ioc_label="ipv4",
+            if 'ipv4' in ioc_exclusions: pass
+            else: append_report_if_iocs_found(the_props.address_value, target_key="value", ioc_label="ipv4",
                                         validator=validate_ip_address)
 
         if the_props.category == 'ipv6-addr' and the_props.address_value:
             _logger.debug(f"Found IPV6: {the_props.address_value}")
-            append_report_if_iocs_found(the_props.address_value, target_key="value", ioc_label="ipv6",
+            if 'ipv6' in ioc_exclusions: pass
+            else: append_report_if_iocs_found(the_props.address_value, target_key="value", ioc_label="ipv6",
                                         validator=validate_ip_address)
 
     elif type(the_props) == File:
         if the_props.md5:
             _logger.debug(f"Found MD5: {the_props.md5}")
-            append_report_if_iocs_found(the_props, target_key="md5", ioc_label="md5", validator=validate_md5sum)
+            if 'md5' in ioc_exclusions: pass
+            else: append_report_if_iocs_found(the_props, target_key="md5", ioc_label="md5", validator=validate_md5sum)
         if the_props.sha256:
             _logger.debug(f"Found SHA256: {the_props.sha256}")
-            append_report_if_iocs_found(the_props, target_key="sha256", ioc_label="sha256", validator=validate_sha256)
+            if 'sha256' in ioc_exclusions: pass
+            else: append_report_if_iocs_found(the_props, target_key="sha256", ioc_label="sha256", validator=validate_sha256)
 
     return reports
 
